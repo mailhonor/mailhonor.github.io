@@ -1,0 +1,33 @@
+---
+layout: wiki
+title: 系统安装
+---
+
+<H3>首先安装libzc</H3>
+<pre>
+    git clone https://github.com/mailhonor/libzc.git;
+    cd libzc;
+    make;
+</pre>
+得到 <B>libzc.a , libzc.h</B>,备用
+
+<H3>其他依赖的公共库</H3>
+<pre class="code">
+    libgsl0-dbg libgsl0-dev libgsl0ldbl libssl libssl-dev libsqlite3 libsqlite3-dev
+</pre>
+
+<H3>安装主程序honor-spam</H3>
+<pre>
+    git clone https://github.com/mailhonor/honor_spam.git
+    cd honor_spam;
+    复制上面提到 "libzc.a , libzc.h" 到当前目录.
+    make; make install;
+</pre>
+
+<H3>下载最新反垃圾库</H3>
+<ul>
+    <li><A target="_blank" href="./download.html">下载页面</A></li>
+    <li>下载得到 const.db.gz, 建议备份</li>
+    <li>解开得到 const.db, 移动到 /opt/honor_spam/spamdb/const.db</li>
+</ul>
+

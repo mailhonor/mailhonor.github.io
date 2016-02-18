@@ -1,0 +1,143 @@
+---
+layout: wiki
+title: 使用方法，如何识别垃圾邮件，如何训练
+---
+
+<H2>启动/停止/重启</H2>
+<pre>
+    /opt/honor_spam/libexec/honor_spamd.sh start/stop/reload
+</pre>
+
+<H2>如何识别垃圾邮件</H2>
+<p>服务器的默认服务端口是 127.0.0.1:32502, 可配置(<A href="./file.html">master.cf</A>)
+
+<H3>识别流程(通信协议)</H3>
+<pre>
+1. 连接: <B>127.0.0.1:32502</B>
+2. 输入: <B><u>score</u>[一个空格]邮件文件路径\n</B>
+3. 返回: <B>得分\n</B>
+4. 客户端关闭连接 或 回到 2
+</pre>
+
+<p>所谓 <b>"邮件文件路径"</b> 形如 /opt/mail/storage/some1.eml
+<br>系统假设:客户端提供的任何文件都是邮件且可读.
+<p>所谓 <b>"得分"</b> 形如 0.700268, 介于0.000000 ~ 1.000000 之间,越接近1.0,是垃圾邮件的可能性越大.
+<br>根据得分,由使用者来最终确定是不是垃圾邮件.
+<br>根据作者实际经验,大于0.7的是垃圾邮件,小于0.4为正常邮件.
+
+<H3>例子: 邮件/opt/mail/storage/u1.eml 的得分</H3> 
+<pre>
+输入: <b>score /opt/mail/storage/u1.eml\n</b>
+返回: <b>0.212383\n</b>
+</pre>
+
+<H3>php 例子 --- 得分</H3>
+<textarea class="code">
+<?php
+$host = "localhost";
+$port = 32502;
+$threshold_bad = 0.7;
+$threshold_good = 0.4;
+
+function get_score($fp, $eml_fn)
+{
+    global $threshold_bad, $threshold_good;
+
+    fputs($fp, "score $eml_fn\n");
+    $data = @fgets($fp);
+
+    if($data === false)
+    {
+        return Array("error", "");
+    }
+
+    $score = trim($data);
+    if($score > $threshold_bad)
+    {
+        return Array("bad", $score);
+    }
+    if($score < $threshold_good)
+    {
+        return Array("good", $score);
+    }
+    return Array("unknown", $score);
+}
+
+$fp = fsockopen($host, $port);
+if(!$fp)
+{
+    echo "can not open spamd at $host:$port\n";
+}
+
+for($i=1;$i<$argc;$i++)
+{
+    $result=get_score($fp, $argv[$i]);
+    echo $result[0], "\t", $result[1], " ", $argv[$i], "\n";
+}
+</textarea>
+
+
+<H2>如何回馈/训练/喂养垃圾邮件和正常邮件</H2>
+
+<pre>
+1. 连接: <B>127.0.0.1:32506</B>
+2. 输入: <B><u>命令</u>[一个空格]邮件文件路径\n</B>
+3. 返回: <B>OK\n</B> 或 <B>ERR\n</B>
+4. 客户端关闭连接 或 回到 2
+</pre>
+<p>所谓 <b>"命令"</b> 包括: good, bad
+<p>所谓 <b>"邮件文件路径"</b> 形如 /opt/mail/storage/some1.eml
+<br>系统假设:客户端提供的任何文件都是邮件且可读.
+
+<H3>例子: 训练 邮件/opt/mail/storage/u2.eml 为正常邮件</H3> 
+<pre>
+输入: good /opt/mail/storage/u2.eml\n
+返回: OK\n 或: ERR\n
+</pre>
+
+
+<H3>例子: 训练 邮件/opt/mail/storage/u3.eml 为垃圾邮件</H3>
+<pre>
+输入: bad /opt/mail/storage/u3.eml\n
+返回: OK\n 或: ERR\n
+</pre>
+
+<H3>php 例子 -- 训练</H3>
+<textarea class="code">
+<?php
+$host = "localhost";
+$port = 32502;
+
+function train_do($fp, $good_or_bad, $eml_fn)
+{
+    fputs($fp, "$good_or_bad $eml_fn\n");
+    $data = @fgets($fp);
+
+    if($data === false)
+    {
+        return false;
+    }
+
+    $res = trim($data);
+    return $res;
+}
+
+if ($argc < 3)
+{
+    echo "USAGE: ",$argv[0]," good/bad eml_fn_list...\n";
+    die();
+}
+$good_or_bad = $argv[1];
+
+$fp = fsockopen($host, $port);
+if(!$fp)
+{
+    echo "can not open spamd at $host:$port\n";
+}
+
+for($i=2;$i<$argc;$i++)
+{
+    $result=train_do($fp, $good_or_bad, $argv[$i]);
+    echo $result, "\n";
+}
+</textarea>

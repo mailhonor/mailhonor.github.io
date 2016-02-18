@@ -1,0 +1,4 @@
+RewriteEngine on
+RewriteRule (.*).html$ blog_view.php?url=$1.html&view=yes 
+RewriteRule ^/$ blog_view.php?url=index.html&view=yes 
+RewriteRule (.*)/$ blog_view.php?url=$1/index.html&view=yes 
