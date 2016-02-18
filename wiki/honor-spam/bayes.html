@@ -1,0 +1,73 @@
+---
+layout: wiki
+title: 贝叶斯(Bayes)算法模型
+---
+
+<p>针对邮件内容的反垃圾技术有很多, 大多数采用贝叶斯统计,如bogofilter, honor-spam
+
+<h2>贝叶斯算法模型</h2>
+<H3>先说明或定义一些基本语义</H3>
+<pre>
+min_dev   :    0.375000
+robs      :    0.017800
+robx      :    0.520000
+EPS       :    可能是 0
+EVEN_ODDS :    0.5
+badmsgs   :    训练过的垃圾邮件的封数.
+goodmsgs  :    训练过的正常邮件的封数.
+</pre>
+
+<H3>算法模型</H3>
+<p><b>第一个公式</b>
+<pre>
+p(w) = (bad *goodmsgs)/(bad*goodmsgs + good*badmsgs);  
+</pre>
+<ul>
+<li>w : 一个单词,如 happy,河北,goodstudy,上地</li>
+<li>bad : w 出现在垃圾邮件中的邮件数.</li>
+<li>good : w 出现在正常邮件中的邮件数.</li>
+<li>如果w多次出现在一封邮件中,则算 一次.</li>
+</ul>
+
+
+<p><b>第二个公式</b>
+<pre>
+n = good + bad;  
+if (n == 0)  
+    f(w) = robx  
+else  
+    f(w) = (robs*robx + n*p(w))/(robs + n);  
+</pre>
+
+<p><b>结果(得分)</b>
+<pre>
+P = 1 - ((1-f(w1))*(1-f(w2))*...*(1-f(wn)))^(1/n)  
+Q =  1 - (f(w1)*f(w2)*...*f(wn))^(1/n)  
+S = Q/(P + Q)  
+</pre>
+<p>S是结果, 介于 0 ~ 1 之间的double.越接近1,是垃圾邮件的可能性越大
+
+
+
+<h2>训练过程</h2>
+<h3>训练一封垃圾邮件</h3>
+<p>分词,得到一个分词集合,一个词出现多次算一次.结果(bw1,bw2,bw3,...)
+<br>badmsgs ++
+<br>bw1的bad计数++,bw2的bad计数++,...
+
+<p>训练正常邮件类似.
+
+
+<h3>反垃圾库的结构</h3>
+<p>类似:
+<pre>
+badmsgs : 23745, goodmsgs : 737347
+</pre>
+
+<p>
+<pre>
+word    good    bad  
+w1      13512   1532  
+w2      5334    552  
+w3      248     93  
+</pre>

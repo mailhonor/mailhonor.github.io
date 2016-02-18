@@ -30,3 +30,17 @@
 
 # Debug files
 *.dSYM/
+
+# Mime
+tags
+dd
+dd2
+dd.txt
+*~
+plist
+OBJS_DEST
+depend
+GPATH
+GRTAGS
+GSYMS
+GTAGS

@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+<title>{{page.title}}</title>
+<style type="text/css">
+html,body{height:101%;font-size:1em;padding:0;margin:0;}
+H2 {border-bottom:1px solid #666;}
+A{text-decoration:none;color:#3399cc;}
+A:hover{text-decoration:underline;}
+div.middle{margin:0 auto;max-width:990px;}
+div.title{background-color:#336699;padding:1em 0;}
+div.title H1{margin:0;color:#FFF;}
+pre{border:1px solid #369369;border-radius:5px;padding:10px;margin:0;background-color:#EEE;word-break:break-all;word-wrap:break-word;white-space:pre-wrap;font-family:Courier;}
+#nav A{font-style:italic;color:#006486;}
+#nav A:first-child{font-style:normal;font-weight:bold;font-size:1.2em;color:#3399cc;margin-right:3em;}
+</style>
+<script src="http://apps.bdimg.com/libs/jquery/2.1.4/jquery.min.js"></script>
+<script>
+var duoshuoQuery={short_name:"mailhonor"};
+$(window).load(function(){
+$.each(document.body.getElementsByTagName("TEXTAREA"),function(i,o){o=$(o);if(o.hasClass("code"))o.after($("<pre></pre>").text(o.val())).hide();});
+$("#nav A").each(function(i,o){if(window.location.href.split($(o).attr("href")).length<2)$(o).remove();});
+$(".ds-thread").attr("data-thread-key","/"+window.location.href.split("/").slice(3).join("/"));
+$.getScript("http://static.duoshuo.com/embed.js");
+});</script>
+</head>
+<body id="top">
+<br>
+<div id="nav" class="middle">
+<A href="/wiki/honor-spam/">honor-spam 中文邮件反垃圾系统</A>
+<A href="/wiki/libzc/">libzc 通用C扩展库</A>
+<A href="/">@荣耀邮件<small> --- 关注Linux平台邮件技术</small></A>
+</div>
+<br>
+
+<div class="title">
+<div class="middle">
+<H1>{{page.title}}</H1>
+</div>
+</div>
+
+<div class="middle">
+<div>{{page.content}}</div>
+<br>
+<div style="text-align:right;border-top:1px solid black;">
+&copy; 2016 <A href="/">HOME</A>
+&nbsp; <A href="/help.html">CONTACT</A>
+&nbsp; <A href="#top">TOP</A>
+</div>
+
+<div class="ds-thread"></div>
+<br>
+
+<div style="text-align:right;border-top:1px solid black;">
+&copy; 2016 <A href="/">HOME</A>
+&nbsp; <A href="/help.html">CONTACT</A>
+&nbsp; <A href="#top">TOP</A>
+</div>
+</div>
+<br><br>
+</body>
+</html>
