@@ -31,36 +31,41 @@ function _getGP($na, $de=''){
 
 function _postInfo($fn, $flag=0){
 	$TS=Array();
+    $TS["have_label"] = 0;
 	$fp = fopen($fn, "r");
 	if(!$fp){
 		die("open error: $fn");
 	}
 	$line = fgets($fp);
-	if($line !="---\n"){
-		die("label1 error: $fn");
-	}
-	while(($line=fgets($fp))){
-		if($line == "---\n"){
-			break;
-		}
-		$p=strpos($line, ':');
-		if($p===false || $p==0){
-			die("label2 error: $fn : $line");
-		}
-		$line[$p]="\n";
-		list($t, $v) = explode("\n", $line);
-		$v=trim($v);
-		$TS[$t]=$v;
-	}
-	if($line != "---\n"){
-		die("label2 error: $fn");
-	}
-	$TS["ccc"] = strtolower($TS["ccc"]);
-	if(!$flag){
-		fclose($fp);
-		return array($TS, '');
-	}
-	$content='';
+	if($line =="---\n"){
+        while(($line=fgets($fp))){
+            if($line == "---\n"){
+                break;
+            }
+            $p=strpos($line, ':');
+            if($p===false || $p==0){
+                die("label2 error: $fn : $line");
+            }
+            $line[$p]="\n";
+            list($t, $v) = explode("\n", $line);
+            $v=trim($v);
+            $TS[$t]=$v;
+            $TS["have_label"] = 1;
+        }
+        if($line != "---\n"){
+            die("label2 error: $fn");
+        }
+        $TS["ccc"] = strtolower($TS["ccc"]);
+        if(!$flag){
+            fclose($fp);
+            return array($TS, '');
+        }
+        $content='';
+    }
+    else
+    {
+        $content = $line;
+    }
 	while($c=fread($fp, 1024*1024)){
 		$content = $content.$c;
 	}
@@ -96,6 +101,10 @@ $url = _getGP("url");
 $fn = $url;
 
 list($TS, $CON) = _postInfo($fn, 1);
+if ($TS["have_label"] == 0)
+{
+    die($CON);
+}
 
 if(!isset($TS["ccc"])) $TS["ccc"]="";
 if(!isset($TS["comment"])) $TS["comment"]="no";
