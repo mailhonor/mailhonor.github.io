@@ -1,0 +1,348 @@
+---
+layout: wiki
+title:  honor-spam 中文邮件反垃圾系统
+---
+
+<p>honor-spam 是一个基于智能学习的中文邮件反垃圾系统. 支持中文简体,繁体,日文,韩文,越南文,等文字.
+
+<p>honor-spam 是开源软件. 代码仓库:
+<A target="_blank" href="https://github.com/mailhonor/honor-spam.git">https://github.com/mailhonor/honor-spam.git</A>
+
+<p>百度网盘下载程序和反垃圾库:
+<A href="http://pan.baidu.com/s/1hrfROqw" target="_blank">http://pan.baidu.com/s/1hrfROqw</A>
+
+<H2>安装过程</H2>
+<p>分两步: 1) 安装运行程序, 2) 安装最新反垃圾库.
+<H3>安装运行程序<small><i> &nbsp;
+(只支持64位Linux系统, <a href="#srcinstall">源码安装</a>)</i></small></H3>
+<ul>
+    <li>下载得到 <B> honor_spamd.tgz </B> </li>
+    <li>创建目录 <B> /opt/honor_spam/ </B>, 进入其中 </li>
+    <li>解开honor_spamd.tgz 即可</li>
+</ul>
+
+<H3>下载最新反垃圾库</H3>
+<ul>
+    <li>下载得到 const.db.gz, 建议备份</li>
+    <li>解开得到 const.db, 移动到 /opt/honor_spam/spamdb/const.db</li>
+</ul>
+
+<H3>启动/停止/重启</H3>
+<pre>
+/opt/honor_spam/libexec/honor_spamd.sh start/stop/reload
+</pre>
+
+
+<H2>文件目录说明</H2>
+<table class="listtb">
+<tr>
+    <td width="300"><B>/opt/honor_spam/</B></td>
+    <td>系统默认安装路径, 服务运行时路径.</td>
+</tr>
+<tr>
+    <td><B>./master.cf</B></td>
+    <td>服务配置文件,可设置服务端口</td>
+</tr>
+<tr>
+    <td><B>./config/spamd.cf</B></td>
+    <td>反垃圾程序配置文件</td>
+</tr>
+<tr>
+    <td><B>./spamdb/const.db</B></td>
+    <td>反垃圾库,只读,高速.</td>
+</tr>
+<tr>
+    <td><B>./spamdb/train.db</B></td>
+    <td>反垃圾库,用于训练(回馈,喂养).速度较慢,实际上是sqlite3.</td>
+</tr>
+<tr>
+    <td><B>./libexec/spam_master</B></td>
+    <td>服务管理程序.</td>
+</tr>
+<tr>
+    <td><B>./libexec/spamd</B></td>
+    <td>反垃圾主程序</td>
+</tr>
+<tr>
+    <td><B>./libexec/honor_spamd.sh</B></td>
+    <td>启动/停止/重启 脚本</td>
+</tr>
+<tr>
+    <td><B>./libexec/spam_admin</B></td>
+    <td>一个命令工具,<A href="#spam_admin">详细</A></td>
+</tr>
+</table>
+
+<H2>配置文件 ./master.cf</H2>
+<pre>
+[zserver spamd]
+   zcmd = libexec/spamd 
+   zconfig = config/spamd.cf
+   zlisten = 127.0.0.1:32502
+</pre>
+<p> 意思是：一个命名为spamd的服务,其程序libexec/spamd,打开端口127.0.0.1:32502,读取配置文件 config/spamd.cf.
+<p> 此配置是<A target="_blank" href="/wiki/libzc.html">libzc</A>中的配置风格.
+字母z开头的配置项为libzc系统保留字.
+<p> zlisten 是监听端口配置，分两类,网络端口(有:冒号)和unix套接字.如:
+<ul>
+    <li>zlisten = 0:32502 #打开全部网络设备的32502端口</li>
+    <li>zlisten = ../some/unix/domainsokect #打开unix套接字,其路径为 ../some/unix/domainsokect</li>
+    <li>zlisten = 0:32502, 127.0.0.1:32500, /another/unixdomain, ../some/unix/domainsokect #上述组合,共4个端口
+</ul>
+
+<H2>配置文件 ./config/spamd.cf</H2>
+<pre>
+concurrency_limit = 8
+spam_constdb = spamdb/const.db
+spam_traindb = spamdb/train.db
+</pre>
+<ul>
+    <li>concurrency_limit 工作线程数</li>
+    <li>spam_constdb 只读反垃圾库</li>
+    <li>spam_traindb 可写反垃圾库(用于训练，反馈）</li>
+</ul>
+
+<H2>如何识别垃圾邮件</H2>
+<p>服务器的默认服务端口是 127.0.0.1:32502
+
+<H3>识别流程(通信协议)</H3>
+<pre>
+1. 连接: <B>127.0.0.1:32502</B>
+2. 输入: <B><u>score</u>[一个空格]邮件文件路径\n</B>
+3. 返回: <B>得分\n</B>
+4. 客户端关闭连接 或 回到 2
+</pre>
+
+<p>所谓 <b>"邮件文件路径"</b> 形如 /opt/mail/storage/some1.eml
+<br>系统假设:客户端提供的任何文件都是邮件且可读.
+<p>所谓 <b>"得分"</b> 形如 0.700268, 介于0.000000 ~ 1.000000 之间,越接近1.0,是垃圾邮件的可能性越大.
+<br>根据得分,由使用者来最终确定是不是垃圾邮件.
+<br>根据作者实际经验,大于0.7的是垃圾邮件,小于0.4为正常邮件.
+
+<H3>例子: 邮件/opt/mail/storage/u1.eml 的得分</H3> 
+<pre>
+输入: <b>score /opt/mail/storage/u1.eml\n</b>
+返回: <b>0.212383\n</b>
+</pre>
+
+<H3>php 例子 --- 得分</H3>
+<textarea class="code">
+<?php
+$host = "localhost";
+$port = 32502;
+$threshold_bad = 0.7;
+$threshold_good = 0.4;
+
+function get_score($fp, $eml_fn)
+{
+    global $threshold_bad, $threshold_good;
+
+    fputs($fp, "score $eml_fn\n");
+    $data = @fgets($fp);
+
+    if($data === false)
+    {
+        return Array("error", "");
+    }
+
+    $score = trim($data);
+    if($score > $threshold_bad)
+    {
+        return Array("bad", $score);
+    }
+    if($score < $threshold_good)
+    {
+        return Array("good", $score);
+    }
+    return Array("unknown", $score);
+}
+
+$fp = fsockopen($host, $port);
+if(!$fp)
+{
+    echo "can not open spamd at $host:$port\n";
+}
+
+for($i=1;$i<$argc;$i++)
+{
+    $result=get_score($fp, $argv[$i]);
+    echo $result[0], "\t", $result[1], " ", $argv[$i], "\n";
+}
+</textarea>
+
+
+<H2>如何回馈/训练/喂养垃圾邮件和正常邮件</H2>
+
+<pre>
+1. 连接: <B>127.0.0.1:32506</B>
+2. 输入: <B><u>命令</u>[一个空格]邮件文件路径\n</B>
+3. 返回: <B>OK\n</B> 或 <B>ERR\n</B>
+4. 客户端关闭连接 或 回到 2
+</pre>
+<p>所谓 <b>"命令"</b> 包括: good, bad
+<p>所谓 <b>"邮件文件路径"</b> 形如 /opt/mail/storage/some1.eml
+<br>系统假设:客户端提供的任何文件都是邮件且可读.
+
+<H3>例子: 训练 邮件/opt/mail/storage/u2.eml 为正常邮件</H3> 
+<pre>
+输入: good /opt/mail/storage/u2.eml\n
+返回: OK\n 或: ERR\n
+</pre>
+
+
+<H3>例子: 训练 邮件/opt/mail/storage/u3.eml 为垃圾邮件</H3>
+<pre>
+输入: bad /opt/mail/storage/u3.eml\n
+返回: OK\n 或: ERR\n
+</pre>
+
+<H3>php 例子 -- 训练</H3>
+<textarea class="code">
+<?php
+$host = "localhost";
+$port = 32502;
+
+function train_do($fp, $good_or_bad, $eml_fn)
+{
+    fputs($fp, "$good_or_bad $eml_fn\n");
+    $data = @fgets($fp);
+
+    if($data === false)
+    {
+        return false;
+    }
+
+    $res = trim($data);
+    return $res;
+}
+
+if ($argc < 3)
+{
+    echo "USAGE: ",$argv[0]," good/bad eml_fn_list...\n";
+    die();
+}
+$good_or_bad = $argv[1];
+
+$fp = fsockopen($host, $port);
+if(!$fp)
+{
+    echo "can not open spamd at $host:$port\n";
+}
+
+for($i=2;$i<$argc;$i++)
+{
+    $result=train_do($fp, $good_or_bad, $argv[$i]);
+    echo $result, "\n";
+}
+</textarea>
+
+
+<H2 id="spam_admin">spam_admin 管理工具使用说明</H2>
+
+<H3> 先看下USAGE</H3>
+<textarea class="code">
+$ ./libexec/spam_admin 
+USAGE:
+  ./libexec/spam_admin good        traindb                   eml_file/eml_dir
+  ./libexec/spam_admin bad         traindb                   eml_file/eml_dir
+  ./libexec/spam_admin test        db [ db2 [ ...]]          eml_file/eml_dir
+  ./libexec/spam_admin view        eml_file                                  
+  ./libexec/spam_admin segment     eml_file                                  
+  ./libexec/spam_admin charset     filename                                  
+  ./libexec/spam_admin merge_db    constdb_or_traindb        traindb         
+  ./libexec/spam_admin convert_db  traindb                   new_constdb
+</textarea>
+<ul>
+<li>good/bad/test/view/segment/charset/merge_db/convert_db 是第一个参数,表明功能.</li>
+<li>constdb 表示一个只读的数据库文件.</li>
+<li>traindb 表示个可写的数据库文件(sqlite3).</li>
+<li>eml_file 表示一个邮件文件.</li>
+<li>eml_dir 表示一个目录,其下(及递归子目录下)的文件为邮件</li>
+</ul>
+
+<H3>good: 训练正常信件</H3>
+<pre>
+./libexec/spam_admin good a.tdb ./a.eml
+./libexec/spam_admin good a.tdb /spam/emls/good/
+</pre>
+
+<H3>bad: 训练垃圾信件</H3>
+<pre>
+./libexec/spam_admin bad a.tdb ./b.eml
+./libexec/spam_admin bad a.tdb /spam/emls/bad/
+</pre>
+
+<H3>test: 测试信件得分</H3>
+<p>获得一个目录(/spam/emls/test/)下所有邮件的得分.
+<pre>
+./libexec/spam_admin test a.tdb /spam/emls/test/
+</pre>
+
+<p>获得一个目录(/spam/emls/test/)下所有邮件的得分, 更多反垃圾库.
+<pre>
+./libexec/spam_admin test a.tdb b.tdb c.tdb d.cdb e.cdb...  /spam/emls/test/
+</pre>
+
+<p>获得一个邮件的得分, 并且给出更详细的得分信息.
+<pre>
+./libexec/spam_admin test a.tdb b.tdb c.tdb d.cdb e.cdb...  /spam/emls/test/someone.eml
+</pre>
+
+<H3>view: 查看信件</H3>
+<p>解开一封信件, 返回非常详细的信件信息.
+包括主题,发件人,收件人,...,正文,附件名,...mime格式等.
+<br>并且会把可读信息信转为UTF-8
+<pre>
+./libexec/spam_admin view /somepath/somepath2/a.eml
+</pre>
+
+<H3>segment: 信件分词</H3>
+<p>对一封信件,做分词(切词)操作,查看分词结果,用于调试.
+<pre>
+./libexec/spam_admin segment /somepath/somepath2/a.eml
+</pre>
+
+<H3>merge_db: 合并数据库</H3>
+<p>把一个反垃圾数据库(既可以是constdb,也可以是traindb), 合并到一个traindb.
+<pre>
+./libexec/spam_admin merge_db a.cdb dest.tdb
+./libexec/spam_admin merge_db b.tdb dest.tdb
+</pre>
+<p>如果 dest.tdb不存在,会创建一个.
+
+<H3>convert_db: 数据库格式转换</H3>
+<p>把一个traindb转换为constdb.因为constdb比traindb快的多得多.
+<pre>
+./libexec/spam_admin convert_db a.tdb a.cdb
+</pre>
+<p>a.cdb如果不存在,则创建一个,否则被覆盖.
+
+
+<H2 id="srcinstall">从源码安装程序</H2>
+
+<H3>首先安装libzc</H3>
+<pre>
+git clone https://github.com/mailhonor/libzc.git
+cd libzc
+make
+</pre>
+得到 <B>libzc.a , libzc.h</B>,备用
+
+<H3>其他依赖的公共库</H3>
+<pre class="code">
+libgsl0-dbg libgsl0-dev libgsl0ldbl libssl libssl-dev libsqlite3 libsqlite3-dev
+</pre>
+
+<H3>安装主程序honor-spam</H3>
+<pre>
+git clone https://github.com/mailhonor/honor-spam.git
+cd honor-spam
+复制上面提到 "libzc.a , libzc.h" 到当前目录.
+make
+make install
+</pre>
+
+<H2>相关文章</H2>
+<ul>
+    <li><A href="./antispam-bayes.html">贝叶斯(Bayes)算法模型</A></li>
+</ul>

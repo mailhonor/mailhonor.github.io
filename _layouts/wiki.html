@@ -6,45 +6,44 @@
 <title>{{page.title}}</title>
 <style type="text/css">
 html,body{height:101%;font-size:1em;padding:0;margin:0;}
-H2 {border-bottom:1px solid #666;}
+.middle{margin:0 auto;max-width:990px;}
 A{text-decoration:none;color:#3399cc;}
 A:hover{text-decoration:underline;}
-div.middle{margin:0 auto;max-width:990px;}
-div.title{background-color:#336699;padding:1em 0;}
-div.title H1{margin:0;color:#FFF;}
-pre{border:1px solid #369369;border-radius:5px;padding:10px;margin:0;background-color:#EEE;word-break:break-all;word-wrap:break-word;white-space:pre-wrap;font-family:Courier;}
-#nav A{font-style:italic;color:#006486;}
-#nav A:first-child{font-style:normal;font-weight:bold;font-size:1.2em;color:#3399cc;margin-right:3em;}
+H2{margin-top:2em;border-bottom:2px solid #666;}
+H2:before{content:"@ ";}
+pre{border:1px solid #369369;border-radius:5px;padding:10px;margin:0;background-color:#f6f5f3;word-break:break-all;word-wrap:break-word;white-space:pre-wrap;font-family:Courier;}
+#nav A{color:#000;}
+.listtb{border-spacing:0;width:100%;}
+.listtb td{border-bottom:1px dashed black;padding-top:0.3em;}
+.listtb tr:hover td{border-bottom:1px solid #d74c2e;}
 </style>
 <script src="http://apps.bdimg.com/libs/jquery/2.1.4/jquery.min.js"></script>
 <script>
 var duoshuoQuery={short_name:"mailhonor"};
 $(window).load(function(){
-$.each(document.body.getElementsByTagName("TEXTAREA"),function(i,o){o=$(o);if(o.hasClass("code"))o.after($("<pre></pre>").text(o.val())).hide();});
-$("#nav A").each(function(i,o){if(window.location.href.split($(o).attr("href")).length<2)$(o).remove();});
+$.each($("TEXTAREA.code"),function(i,o){o=$(o);o.after($("<pre></pre>").text(o.val())).hide();});
 $(".ds-thread").attr("data-thread-key","/"+window.location.href.split("/").slice(3).join("/"));
 $.getScript("http://static.duoshuo.com/embed.js");
 });</script>
 </head>
 <body id="top">
 <br>
-<div id="nav" class="middle">
-<A href="/wiki/honor-spam/">honor-spam 中文邮件反垃圾系统</A>
-<A href="/wiki/libzc/">libzc 通用C扩展库</A>
-<A href="/">@荣耀邮件<small> --- 关注Linux平台邮件技术</small></A>
-</div>
-<br>
+<table id="nav" cellpadding="0" cellspacing="0" width="100%" class="middle"><tr>
+<td><A href="/">@荣耀邮件<small> --- 关注Linux平台邮件技术</small></A></td><td align="right">
+<A href="/">我的项目</A>
+</td></tr></table>
 
-<div class="title">
+<br>
+<div style="background-color:#336699;padding:9px 0;">
 <div class="middle">
-<H1>{{page.title}}</H1>
+<H1 style="margin:0;color:#FFF;">{{page.title}}</H1>
 </div>
 </div>
 
 <div class="middle">
 <div>{{page.content}}</div>
 <br>
-<div style="text-align:right;border-top:1px solid black;">
+<div style="text-align:right;border-top:2px solid black;">
 &copy; 2016 <A href="/">HOME</A>
 &nbsp; <A href="/help.html">CONTACT</A>
 &nbsp; <A href="#top">TOP</A>
@@ -53,7 +52,7 @@ $.getScript("http://static.duoshuo.com/embed.js");
 <div class="ds-thread"></div>
 <br>
 
-<div style="text-align:right;border-top:1px solid black;">
+<div style="text-align:right;border-top:2px solid black;">
 &copy; 2016 <A href="/">HOME</A>
 &nbsp; <A href="/help.html">CONTACT</A>
 &nbsp; <A href="#top">TOP</A>

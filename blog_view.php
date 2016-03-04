@@ -103,6 +103,7 @@ $fn = $url;
 list($TS, $CON) = _postInfo($fn, 1);
 if ($TS["have_label"] == 0)
 {
+    $CON = str_replace("$.getScript", "//", $CON);
     die($CON);
 }
 
@@ -113,6 +114,7 @@ if(!isset($TS["layout"])){
 }
 $output=file_get_contents("_layouts/".$TS["layout"].".html");
 $converts=Array(
+	"$.getScript"=>"//",
 	"http://apps.bdimg.com/libs/jquery/2.1.4/jquery.min.js"=>"/test_jscss/jquery.min.js",
 	"{{page.title}}"=>$TS["title"],
 	"{{page.ccc}}"=>$TS["ccc"],

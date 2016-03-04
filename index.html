@@ -3,36 +3,40 @@
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
 <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-<title>@荣耀邮件 关注Linux平台邮件技术</title>
+<title>@荣耀邮件 --- 关注Linux平台邮件技术</title>
 <style type="text/css">
-html,body{height:101%;font-size:16px;padding:0;margin:0;}
-H2 {border-bottom:1px solid #666;}
+html,body{height:101%;font-size:1em;padding:0;margin:0;}
+.middle{margin:0 auto;max-width:990px;}
 A{text-decoration:none;color:#3399cc;}
 A:hover{text-decoration:underline;}
-div.middle{margin:0 auto;max-width:990px;}
-div.title{background-color:#336699;padding:1em 0;}
-div.title H1{margin:0;color:#FFF;}
-pre{border:1px solid #369369;border-radius:5px;padding:10px;margin:0;background-color:#EEE;word-break:break-all;word-wrap:break-word;white-space:pre-wrap;font-family:Courier;}
+H2{margin-top:2em;border-bottom:2px solid #666;}
+H2:before{content:"@ ";}
+pre{border:1px solid #369369;border-radius:5px;padding:10px;margin:0;background-color:#f6f5f3;word-break:break-all;word-wrap:break-word;white-space:pre-wrap;font-family:Courier;}
+#nav A{color:#000;}
+.listtb{border-spacing:0;width:100%;}
+.listtb td{border-bottom:1px dashed black;padding-top:0.3em;}
+.listtb tr:hover td{border-bottom:1px solid #d74c2e;}
 </style>
 <script src="http://apps.bdimg.com/libs/jquery/2.1.4/jquery.min.js"></script>
 <script>
-var duoshuoQuery = {short_name:"mailhonor"};
+var duoshuoQuery={short_name:"mailhonor"};
 $(window).load(function(){
-$.each(document.body.getElementsByTagName("TEXTAREA"),function(i,o){o=$(o);if(o.hasClass("code"))o.after($("<pre></pre>").text(o.val())).hide();});
-$("#nav A").each(function(i,o){if(window.location.href.split($(o).attr("href")).length<2)$(o).hide();});
+$.each($("TEXTAREA.code"),function(i,o){o=$(o);o.after($("<pre></pre>").text(o.val())).hide();});
+$(".ds-thread").attr("data-thread-key","/"+window.location.href.split("/").slice(3).join("/"));
 $.getScript("http://static.duoshuo.com/embed.js");
 });</script>
 </head>
 <body id="top">
 <br>
-<div id="nav" style="font-size:1.2em;" class="middle"><B>
-<A href="/">@荣耀邮件<small> --- 关注Linux平台邮件技术</small></A>
-</B></div>
-<br>
+<table id="nav" cellpadding="0" cellspacing="0" width="100%" class="middle"><tr>
+<td><A href="/">@荣耀邮件<small> --- 关注Linux平台邮件技术</small></A></td><td align="right">
+<A href="/">我的项目</A>
+</td></tr></table>
 
-<div class="title">
+<br>
+<div style="background-color:#336699;padding:9px 0;">
 <div class="middle">
-    <H1>@荣耀邮件 关注Linux平台邮件技术</H1>
+<H1 style="margin:0;color:#FFF;">荣耀邮件 关注Linux平台邮件技术</H1>
 </div>
 </div>
 
@@ -41,7 +45,7 @@ $.getScript("http://static.duoshuo.com/embed.js");
 <p> 个人的一些开源软件,整理如下
 
 <dl>
-<dt><H3><a href="/wiki/honor-spam/">honor-spam 中文邮件内容反垃圾识别系统</a></H3></dt>
+<dt><H3><a href="/wiki/honor-spam.html">honor-spam 中文邮件内容反垃圾识别系统</a></H3></dt>
 <dd>
 <p>支持中文简体,繁体,日文,韩文,越南文,等文字.
 <br>信件解析快速,精确,兼容度高.强大的中文字符集识别模块.独特的分词系统.高效的反垃圾库系统.
@@ -80,18 +84,19 @@ libzc邮件解码模块.使用简单,结果准确,兼容度高.中文字符集�
 </dl>
 </div>
 <br>
-<div style="text-align:right;border-top:1px solid black;">
+<div style="text-align:right;border-top:2px solid black;">
 &copy; 2016 <A href="/">HOME</A>
 &nbsp; <A href="/help.html">CONTACT</A>
 &nbsp; <A href="#top">TOP</A>
 </div>
 
-<div class="ds-thread" data-thread-key="index"></div>
+<div class="ds-thread"></div>
 <br>
-<div style="text-align:right;border-top:1px solid black;">
-    &copy; 2016 <A href="/">HOME</A>
-    &nbsp; <A href="/help.html">CONTACT</A>
-    &nbsp; <A href="#top">TOP</A>
+
+<div style="text-align:right;border-top:2px solid black;">
+&copy; 2016 <A href="/">HOME</A>
+&nbsp; <A href="/help.html">CONTACT</A>
+&nbsp; <A href="#top">TOP</A>
 </div>
 </div>
 <br><br>
