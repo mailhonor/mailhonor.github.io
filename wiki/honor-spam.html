@@ -16,9 +16,9 @@ title:  honor-spam 中文邮件反垃圾系统
 <H3>安装运行程序<small><i> &nbsp;
 (只支持64位Linux系统, <a href="#srcinstall">源码安装</a>)</i></small></H3>
 <ul>
-    <li>下载得到 <B> honor_spamd.tgz </B> </li>
+    <li>下载得到 <B> honor_spam.tgz </B> </li>
     <li>创建目录 <B> /opt/honor_spam/ </B>, 进入其中 </li>
-    <li>解开honor_spamd.tgz 即可</li>
+    <li>解开honor_spam.tgz 即可</li>
 </ul>
 
 <H3>下载最新反垃圾库</H3>
@@ -29,7 +29,7 @@ title:  honor-spam 中文邮件反垃圾系统
 
 <H3>启动/停止/重启</H3>
 <pre>
-/opt/honor_spam/libexec/honor_spamd.sh start/stop/reload
+/opt/honor_spam/libexec/honor_spamd.sh start/stop/reload/restart
 </pre>
 
 
@@ -38,10 +38,6 @@ title:  honor-spam 中文邮件反垃圾系统
 <tr>
     <td width="300"><B>/opt/honor_spam/</B></td>
     <td>系统默认安装路径, 服务运行时路径.</td>
-</tr>
-<tr>
-    <td><B>./master.cf</B></td>
-    <td>服务配置文件,可设置服务端口</td>
 </tr>
 <tr>
     <td><B>./config/spamd.cf</B></td>
@@ -64,7 +60,7 @@ title:  honor-spam 中文邮件反垃圾系统
     <td>反垃圾主程序</td>
 </tr>
 <tr>
-    <td><B>./libexec/honor_spamd.sh</B></td>
+    <td><B>./libexec/honor_spam.sh</B></td>
     <td>启动/停止/重启 脚本</td>
 </tr>
 <tr>
@@ -73,34 +69,25 @@ title:  honor-spam 中文邮件反垃圾系统
 </tr>
 </table>
 
-<H2>配置文件 ./master.cf</H2>
-<pre>
-[zserver spamd]
-   zcmd = libexec/spamd 
-   zconfig = config/spamd.cf
-   zlisten = 127.0.0.1:32502
-</pre>
-<p> 意思是：一个命名为spamd的服务,其程序libexec/spamd,打开端口127.0.0.1:32502,读取配置文件 config/spamd.cf.
-<p> 此配置是<A target="_blank" href="/wiki/libzc.html">libzc</A>中的配置风格.
-字母z开头的配置项为libzc系统保留字.
-<p> zlisten 是监听端口配置，分两类,网络端口(有:冒号)和unix套接字.如:
-<ul>
-    <li>zlisten = 0:32502 #打开全部网络设备的32502端口</li>
-    <li>zlisten = ../some/unix/domainsokect #打开unix套接字,其路径为 ../some/unix/domainsokect</li>
-    <li>zlisten = 0:32502, 127.0.0.1:32500, /another/unixdomain, ../some/unix/domainsokect #上述组合,共4个端口
-</ul>
-
 <H2>配置文件 ./config/spamd.cf</H2>
+<p>此配置是<A target="_blank" href="/wiki/libzc.html">libzc</A>中的配置风格.
+<br>字母z开头的配置项为libzc保留字.
 <pre>
+zcmd = libexec/spamd 
+
+# zlisten 是监听端口配置，分两类,网络端口(有:冒号)和unix套接字.如:
+#   0:32502, 127.0.0.1:32501, /someunixpaht/domainsokect
+zlisten = 127.0.0.1:32502
+
+# 工作线程数
 concurrency_limit = 8
+
+# 只读反垃圾库
 spam_constdb = spamdb/const.db
+
+# 可写反垃圾库(用于训练，反馈）
 spam_traindb = spamdb/train.db
 </pre>
-<ul>
-    <li>concurrency_limit 工作线程数</li>
-    <li>spam_constdb 只读反垃圾库</li>
-    <li>spam_traindb 可写反垃圾库(用于训练，反馈）</li>
-</ul>
 
 <H2>如何识别垃圾邮件</H2>
 <p>服务器的默认服务端口是 127.0.0.1:32502
