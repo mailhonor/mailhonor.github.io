@@ -1,0 +1,313 @@
+---
+layout: wiki
+title: HONOR-MILTER 反垃圾邮件网关
+---
+
+<p>honor-milter 是一款基于libmilter的过滤系统. honor-milter 支持中文反垃圾, 支持spf, 支持ip/mail和名单/发送频率, 支持clamav查毒引擎. postfix完美支持libmilter协议. 
+
+<p>honor-milter 是开源软件. 代码仓库:
+<A target="_blank" href="https://github.com/mailhonor/honor-milter.git">https://github.com/mailhonor/honor-milter.git</A>
+
+<p>百度网盘下载程序和反垃圾库:
+<A href="http://pan.baidu.com/s/1hrfROqw" target="_blank">http://pan.baidu.com/s/1hrfROqw</A>
+
+<H2>安装过程</H2>
+<p>分两步: 1) 安装运行程序, 2) 安装最新反垃圾库.
+<H3>安装运行程序<small><i> &nbsp;(只支持64位Linux系统)</i></small></H3>
+<ul>
+    <li>下载得到 <B> honor_milter.tgz </B> </li>
+    <li>创建目录 <B> /opt/honor_milter/ </B>, 进入其中 </li>
+    <li>解开honor_milter.tgz 即可</li>
+</ul>
+
+<H3>下载最新反垃圾库</H3>
+<ul>
+    <li>下载最新版 const-(version).db.gz, 建议备份</li>
+    <li>解开得到 const.db, 移动到 /opt/honor_milter/spamdb/const.db</li>
+</ul>
+
+<H3>启动/停止/重启</H3>
+<pre>
+./libexec/honor_milter.sh start/stop/reload/restart
+</pre>
+
+<H2>postfix 配置</H2>
+<p>修改postfix配置文件/etc/postfix/master.cf.
+<BR>在准备启用libmilter的smtpd服务下增加
+<pre>
+  -o smtpd_milters=inet:127.0.0.1:32505
+  -o milter_protocol=6
+</pre>
+<p>然后,1)启动honor-milter, 2)重启postfix
+
+<H2>文件目录说明</H2>
+<table class="listtb">
+<tr>
+    <td width="300"><B>/opt/honor_milter/</B></td>
+    <td>系统默认安装路径, 所有服务运行时路径.</td>
+</tr>
+<tr>
+    <td><B>./queue/</B></td>
+    <td>libmilter,获得的邮件原文,临时存放地址</td>
+</tr>
+<tr>
+    <td><B>./config/milter.cf</B></td>
+    <td>邮件网关主程序的配置文件</td>
+</tr>
+<tr>
+    <td><B>./config/spamd.cf</B></td>
+    <td>反垃圾程序的配置文件</td>
+</tr>
+<tr>
+    <td><B>./config/anvil.cf</B></td>
+    <td>信件发送频率统计的配置文件</td>
+</tr>
+<tr>
+    <td><B>./config/clear.cf</B></td>
+    <td>内部队列清理配置文件</td>
+</tr>
+<tr>
+    <td><B>./libexec/honor_milter.sh</B></td>
+    <td>启动/停止/重启 脚本</td>
+</tr>
+<tr>
+    <td><B>./libexec/master</B></td>
+    <td>服务管理程序</td>
+</tr>
+<tr>
+    <td><B>./libexec/milter</B></td>
+    <td>邮件网关主程序</td>
+</tr>
+<tr>
+    <td><B>./libexec/spamd</B></td>
+    <td>反垃圾主程序</td>
+</tr>
+<tr>
+    <td><B>./libexec/spam_admin</B></td>
+    <td>一个命令工具,<A href="./honor-spam.html#spam_admin">详细</A></td>
+</tr>
+<tr>
+    <td><B>./libexec/anvil</B></td>
+    <td>信件发送频率统计</td>
+</tr>
+<tr>
+    <td><B>./libexec/clear</B></td>
+    <td>内部过期队列文件清理</td>
+</tr>
+<tr>
+    <td><B>./libexec/spf_test</B></td>
+    <td>简易spf检查工具,<A href="#spf_test">参考</A></td>
+</tr>
+<tr>
+    <td><B>./spamdb/const.db</B></td>
+    <td>反垃圾库,只读,高速.</td>
+</tr>
+<tr>
+    <td><B>./spamdb/train.db</B></td>
+    <td>反垃圾库,用于训练(回馈,喂养).速度较慢,实际上是sqlite3.</td>
+</tr>
+</table>
+
+<H2>配置文件 全局介绍</H2>
+<p>config目录下的配置文件都是<A target="_blank" href="./libzc.html">libzc</A>中的配置风格. 字母z开头的配置项为libzc保留字.
+<br>配置项形如 <B>name 123 = 我的名 789</B>, 等号为键值分隔符,键和值的两侧忽略空格和tab.
+<br>行尾的符号 <B>\</B> 为折行标记, 除此外不支持任何转义.
+<p>master管理器会遍历config/下所有的*.cf的文件.如果其中包含配置项zcmd和zlisten,则认为是一个有效的服务配置文件,否则忽略.
+<pre>
+#zcmd 程序路径,相对于运行目录,或绝对路径
+zcmd = libexec/milter
+
+#zlisten 监听地址, 分两类
+#一. 网络地址, 形如 127.0.0.1:32505 或 0:25 或 192.168.1.9:8000
+#二. domain socket, 形如 socket/somefilename 或 /somepath/some1/some2/somefn
+zlisten = 127.0.0.1:32505
+
+#zproc_limit 并发进程数. 默认为1
+zproc_limit = 10
+
+#zwakeup 服务停止检查间隔,单位是秒. 如果服务停止了zwakeup秒,则启动服务. 默认为1
+zwakeup = 3600
+
+#非z开头的配置项为自定义配置,其含义由开发者定义, 如
+www_title = 我的站点名称
+author = 作者
+email = 邮件地址
+</pre>
+
+
+<H2>配置文件 ./config/milter.cf</H2>
+<p>文件较大,分块介绍
+
+<h3>服务器配置</h3>
+<pre>
+zcmd = libexec/milter
+zlisten = 127.0.0.1:32505
+zproc_limit = 10
+</pre>
+
+<h3>中文反垃圾</h3>
+<pre>
+#antispam_enable 是否启用反垃圾功能, 默认启用. bool值, yes/y/1 表示true, no/n/0 表示 false
+antispam_enable = 1
+
+#antispam_append_header 反垃圾的结果(得分),追加到邮件头上,其邮件头的name部分
+antispam_append_header = X-honor-antispam
+
+#antispam_server 反垃圾服务监听地址.这里请注意,反垃圾服务必须和milter服务在同一台电脑上.
+antispam_server = 127.0.0.1:32502
+</pre>
+
+<h3>SPF检查</h3>
+<pre>
+#spf_enable 是否启用spf检查功能, 默认禁用
+spf_enable = 0
+
+#spf_destination spf策略, 可选header, reject, discard
+#   header 把结果追加到邮件头, 其邮件头的name部分由配置项spf_append_header设置
+#   reject spf不一致, 拒收(通知发信者).在smtp协议上返回给发信者的信息由配置项spf_reject_reply设置
+#   discard spf不一致, 丢弃(不通知发信者)
+spf_destination = header
+
+#spf_softfail_as_reject 建议保留
+spf_softfail_as_reject = 1
+
+#spf_none_as_reject 如果没有发信域没有配置spf,则当作spf不一致,默认否.
+spf_none_as_reject = 0
+
+spf_append_header = X-honor-spf
+spf_reject_reply = DENY. SPF
+</pre>
+
+<h3>CLAMAV 查毒 </h3>
+<pre>
+#clamav_enable 是否启用clamav查毒功能, 默认禁用
+clamav_enable = 0
+
+#clamav_destination 查毒策略, 可选 reject, discard
+#   reject 有毒, 拒收(通知发信者).在smtp协议上返回给发信者的信息由配置项clamav_reject_reply设置
+#   discard 有毒, 丢弃(不通知发信者)
+clamav_destination = reject
+
+#clamav的服务clamd监听地址, 参见/etc/clamav/clamd.conf中配置项LocalSocket和TCPSocket
+clamav_server = /var/run/clamav/clamd.ctl
+
+clamav_reject_reply = DENY. FOUND VIRUS
+</pre>
+<p>请注意: 如果查毒结果为 <B>Can't open file or directory</B>, 情况很多.
+<br>其中一个原因是 apparmor 系统造成的. 请停止 apparmor, 或修改 /etc/apparmor.d/usr.sbin.clamd
+
+<h3>发信ip/sender投递频率限制</h3>
+<pre>
+#投递频率所谓的上限值形如 123-5677-123123:
+#   123, 某ip或sender, 每分钟投递限制, 值为0则不限制(下同)
+#   5677, 某ip或sender, 每小时投递限制
+#   123123, 某ip或sender, 每天投递限制
+
+#black_memcache_server ip频率和sender频率上限值保存在memcache. 其监听端口设置
+black_memcache_server = 127.0.0.1:11211
+
+#black_anvil_server 实时ip/sender频率统计服务的监听端口
+black_anvil_server = 127.0.0.1:32506
+
+#limit_ip_enable 是否启用ip频率限制功能, 默认禁用
+limit_ip_enable = 0
+
+#limit_ip_destination 超过频率的限制策略, 可选 reject, discard
+#   reject 超过频率限制, 拒收(通知发信者).在smtp协议上返回给发信者的信息由配置项limit_ip_reject_reply设置
+#   discard 超过频率限制, 丢弃(不通知发信者)
+limit_ip_destination = reject
+
+limit_ip_reject_reply = DENY. TOO MANY
+
+#limit_ip_limit_default 针对ip的发信频率限制的默认值
+limit_ip_limit_default = 3-10-30
+
+#针对ip, memcache 查询的前缀和后缀, 默认为空.
+#如果 memcache_limit_ip_key_prefix = <B>abc</B>, memcache_limit_ip_key_suffix = <B>def</B>,
+#则查询ip 202.106.123.56的逻辑过程:
+#实际上对memcache查询的键值为<B>abc</B>202.106.123.56<B>def</B>, 值为空则取limit_ip_limit_default的值.
+memcache_limit_ip_key_prefix = 
+memcache_limit_ip_key_suffix = 
+
+
+#limit_sender_enable 是否启用sender频率限制功能, 默认禁用
+limit_sender_enable = 0
+
+#limit_sender_destination 超过频率的限制策略, 可选 reject, discard
+#   reject 超过频率限制, 拒收(通知发信者).在smtp协议上返回给发信者的信息由配置项limit_sender_reject_reply设置
+#   discard 超过频率限制, 丢弃(不通知发信者)
+limit_sender_destination = reject
+
+limit_sender_reject_reply = DENY. TOO MANY
+
+#limit_sender_limit_default 针对sender的发信频率限制的默认值
+limit_sender_limit_default = 3-10-30
+
+#针对sender, memcache 查询的前缀和后缀, 默认为空.
+#如果 memcache_limit_sender_key_prefix = <B>abc</B>, memcache_limit_sender_key_suffix = <B>def</B>,
+#则查询sender xxx@mailhonor.com的结果:
+#实际上对memcache查询分为两步:
+#先查询<B>abc</B><i>xxx@</i>mailhonor.com<B>def</B>,如果值不存在,则查询<B>abc</B>mailhonor.com<B>def</B>,如果值不存在,则取limit_sender_limit_default的值.
+memcache_limit_sender_key_prefix = 
+memcache_limit_sender_key_suffix = 
+</pre>
+
+<H2>配置文件 ./config/spamd.cf</H2>
+<pre>
+zcmd = libexec/spamd 
+
+#反垃圾服务监听地址.这里请注意,反垃圾服务必须和milter服务在同一台电脑上.
+zlisten = 127.0.0.1:32502
+
+zproc_limit = 1
+
+# 工作线程数
+concurrency_limit = 8
+
+# 只读反垃圾库
+spam_constdb = spamdb/const.db
+
+# 可写反垃圾库(用于训练，反馈）
+spam_traindb = spamdb/train.db
+
+#threshold #阈值, 参考值, 反垃圾得分大于等于threshold则给出关键字 <B>bad spam</B>, 否则给出关键字 <B>good</B>
+threshold = 0.7
+</pre>
+
+<H2>配置文件 ./config/anvil.cf</H2>
+<pre>
+zcmd = libexec/anvil
+
+#如果多台电脑运行ip/sender频率限制服务,则只需在某一台服务器启用本服务.
+zlisten = 0:32506
+
+zproc_limit = 1
+</pre>
+
+<H2>配置文件 ./config/clear.cf</H2>
+<pre>
+#内部过期队列文件清理, 保留配置即可,不必深究.
+zcmd = libexec/clear
+
+zlisten = socket/clear
+
+zproc_limit = 1
+
+zwakeup = 3600
+</pre>
+
+<H2 id="spf_test">./libexec/spf_test 工具</H2>
+<p>spf_test 用于检查一个域名和一个ip是否匹配spf, 用法:
+<pre>
+./libexec/spf_test domain ip
+</pre>
+<p>例子
+<pre>
+./libexec/spf_test 263.net 211.157.147.5
+./libexec/spf_test 163.com  202.130.113.39
+</pre>
+
+<H2>相关文章</H2>
+<ul>
+    <li><A href="./honor-spam.html">HONOR-SPAM 中文邮件内容反垃圾识别系统</A></li>
+</ul>
