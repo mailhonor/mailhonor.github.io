@@ -40,6 +40,27 @@ title: HONOR-MILTER 反垃圾邮件网关
 </pre>
 <p>然后,1)启动honor-milter, 2)重启postfix
 
+<H2>垃圾邮件最终过滤方法</H2>
+<p>启用内容反垃圾后,会在邮件头上追加
+<pre>
+X-honor-antispam: 0.893871 bad spam
+</pre>
+或
+<pre>
+X-honor-antispam: 0.281281 good
+</pre>
+<p>上述中,分值介于0~1之间, 越大越可能是垃圾邮件.根据作者经验大于0.7是垃圾邮件的可能行非常大.
+<p>本系统只是追加邮件头到邮件上. 使用者可以根据上述信息采取过滤措施.
+如, 在imap服务器的sieve配置中加入策略,转到垃圾邮件箱或删除等操作.
+<p>以dovecot为例子,在dovecot的sieve的全局配置增加
+<pre>
+if anyof (header :contains "X-honor-antispam" "spam")
+{
+    fileinto "junk";
+    stop;
+}
+</pre>
+
 <H2>文件目录说明</H2>
 <table class="listtb">
 <tr>
