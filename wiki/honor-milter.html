@@ -3,7 +3,7 @@ layout: wiki
 title: HONOR-MILTER 反垃圾邮件网关
 ---
 
-<p>honor-milter 是一款基于libmilter的过滤系统. honor-milter 支持中文反垃圾, 支持spf, 支持ip/mail和名单/发送频率, 支持clamav查毒引擎. postfix完美支持libmilter协议. 
+<p>honor-milter 是一款基于libmilter的过滤系统. honor-milter 支持中文反垃圾, 支持spf, 支持ip/mail和名单/发送频率, 支持clamav查毒引擎. postfix完美支持libmilter协议.
 
 <p>honor-milter 是开源软件. 代码仓库:
 <A target="_blank" href="https://github.com/mailhonor/honor-milter.git">https://github.com/mailhonor/honor-milter.git</A>
@@ -31,7 +31,7 @@ title: HONOR-MILTER 反垃圾邮件网关
 ./libexec/honor_milter.sh start/stop/reload/restart
 </pre>
 
-<H2>postfix 配置</H2>
+<H2>适配postfix, 配置</H2>
 <p>修改postfix配置文件/etc/postfix/master.cf.
 <BR>在准备启用libmilter的smtpd服务下增加
 <pre>
@@ -39,6 +39,15 @@ title: HONOR-MILTER 反垃圾邮件网关
   -o milter_protocol=6
 </pre>
 <p>然后,1)启动honor-milter, 2)重启postfix
+
+<H2>适配sendmail, 配置</H2>
+<p>修改配置文件sendmail.mc
+<BR>增加配置行
+<pre>
+INPUT_MAIL_FILTER(`honor_milter', `S=inet:32505@127.0.0.1')
+</pre>
+<p>然后,1)启动honor-milter, 2)重启sendmail
+
 
 <H2>垃圾邮件最终过滤方法</H2>
 <p>启用内容反垃圾后,会在邮件头上追加
