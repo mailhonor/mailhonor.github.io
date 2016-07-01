@@ -1,4 +1,5 @@
 <?php
+@ini_set("display_errors", "Off");
 $ignorePaths=Array(
 	"_posts"=>1,
 	"_layouts"=>1

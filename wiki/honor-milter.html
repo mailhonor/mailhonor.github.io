@@ -3,11 +3,14 @@ layout: wiki
 title: HONOR-MILTER 反垃圾邮件网关
 ---
 
-<p>honor-milter 是一款基于libmilter的过滤系统. honor-milter 支持中文反垃圾, 支持spf, 支持ip/mail和名单/发送频率, 支持clamav查毒引擎. postfix完美支持libmilter协议.
+<p>honor-milter 是一款基于libmilter的过滤系统. honor-milter 支持中文反垃圾, 支持spf, 支持ip/mail和名单/发送频率, 支持clamav查毒引擎.
 
-<p>honor-milter 是开源软件. 代码仓库:
-<A target="_blank" href="https://github.com/mailhonor/honor-milter.git">https://github.com/mailhonor/honor-milter.git</A>
+<p>内嵌<B>邮件内容反垃圾识别系统</B>,
+支持中文简体,繁体,日文,韩文,越南文,等文字.
+<br>信件解析快速,精确,兼容度高.强大的中文字符集识别模块.独特的分词系统.高效的反垃圾库系统.
+<br>效果达到商用水准.速度极快,在基于dell vostro 2420(notebook)的vmware虚拟机上,单线程每秒处理1000封信件.
 
+<p>honor-milter 支持postfix, sendmail
 <p>百度网盘下载程序和反垃圾库:
 <A href="http://pan.baidu.com/s/1hrfROqw" target="_blank">http://pan.baidu.com/s/1hrfROqw</A>
 
@@ -59,9 +62,9 @@ X-honor-antispam: 0.893871 bad spam
 X-honor-antispam: 0.281281 good
 </pre>
 <p>上述中,分值介于0~1之间, 越大越可能是垃圾邮件.根据作者经验大于0.7是垃圾邮件的可能行非常大.
-<p>本系统只是追加邮件头到邮件上. 使用者可以根据上述信息采取过滤措施.
-如, 在imap服务器的sieve配置中加入策略,转到垃圾邮件箱或删除等操作.
-<p>以dovecot为例子,在dovecot的sieve的全局配置增加
+<p>本系统只追加邮件头. 使用者可以根据上述信息采取过滤措施.
+<br>如, 在imap服务器的sieve配置中加入策略,转到垃圾邮件箱或删除等操作.
+<br>以dovecot为例子,在dovecot的sieve的全局配置增加
 <pre>
 if anyof (header :contains "X-honor-antispam" "spam")
 {
@@ -114,7 +117,7 @@ if anyof (header :contains "X-honor-antispam" "spam")
 </tr>
 <tr>
     <td><B>./libexec/spam_admin</B></td>
-    <td>一个命令工具,<A href="./honor-spam.html#spam_admin">详细</A></td>
+    <td>一个命令工具,<A href="#spam_admin">详细</A></td>
 </tr>
 <tr>
     <td><B>./libexec/anvil</B></td>
@@ -139,10 +142,12 @@ if anyof (header :contains "X-honor-antispam" "spam")
 </table>
 
 <H2>配置文件 全局介绍</H2>
-<p>config目录下的配置文件都是<A target="_blank" href="./libzc.html">libzc</A>中的配置风格. 字母z开头的配置项为libzc保留字.
-<br>配置项形如 <B>name 123 = 我的名 789</B>, 等号为键值分隔符,键和值的两侧忽略空格和tab.
-<br>行尾的符号 <B>\</B> 为折行标记, 除此外不支持任何转义.
-<p>master管理器会遍历config/下所有的*.cf的文件.如果其中包含配置项zcmd和zlisten,则认为是一个有效的服务配置文件,否则忽略.
+<p>config目录下的文件,都是配置文件, <A target="_blank" href="./libzc.html">libzc</A>中的配置风格. 字母z开头的配置项为libzc保留字.
+<p>配置项形如
+<pre><B>name 123 = 我的名 789</B></pre>
+等号为键值分隔符,键和值的两侧忽略空格和tab. 行尾的符号 <B>\</B> <i>(如果有,则)</i>为折行标记, 除此外不支持任何转义.
+<p>master管理器会遍历config/下所有的*.cf的文件(不包括main.cf).
+<br>如果其中包含配置项zcmd和zlisten,则认为是一个有效的服务配置文件,否则忽略.
 <pre>
 #zcmd 程序路径,相对于运行目录,或绝对路径
 zcmd = libexec/milter
@@ -166,7 +171,7 @@ email = 邮件地址
 
 
 <H2>配置文件 ./config/milter.cf</H2>
-<p>文件较大,分块介绍
+<p>主要功能模块配置文件,文件较大, 按模块介绍
 
 <h3>服务器配置</h3>
 <pre>
@@ -201,7 +206,7 @@ spf_destination = header
 #spf_softfail_as_reject 建议保留
 spf_softfail_as_reject = 1
 
-#spf_none_as_reject 如果没有发信域没有配置spf,则当作spf不一致,默认否.
+#spf_none_as_reject 如果发信域没有配置spf,则当作spf不一致,默认否.
 spf_none_as_reject = 0
 
 spf_append_header = X-honor-spf
@@ -223,12 +228,12 @@ clamav_server = /var/run/clamav/clamd.ctl
 
 clamav_reject_reply = DENY. FOUND VIRUS
 </pre>
-<p>请注意: 如果查毒结果为 <B>Can't open file or directory</B>, 情况很多.
-<br>其中一个原因是 apparmor 系统造成的. 请停止 apparmor, 或修改 /etc/apparmor.d/usr.sbin.clamd
+<p>请注意: 如果查毒结果为 <B>Can't open file or directory</B>, 出现错误的原因很多.
+<br>其中一个是 apparmor 系统造成的. 请停止 apparmor, 或修改 /etc/apparmor.d/usr.sbin.clamd
 
 <h3>发信ip/sender投递频率限制</h3>
 <pre>
-#投递频率所谓的上限值形如 123-5677-123123:
+#投递频率所谓的上限值形如 123-5677-123123
 #   123, 某ip或sender, 每分钟投递限制, 值为0则表示黑名单
 #   5677, 某ip或sender, 每小时投递限制
 #   123123, 某ip或sender, 每天投递限制
@@ -238,7 +243,10 @@ black_memcache_server = 127.0.0.1:11211
 
 #black_anvil_server 实时ip/sender频率统计服务的监听端口
 black_anvil_server = 127.0.0.1:32506
+</pre>
 
+<br>
+<pre>
 #limit_ip_enable 是否启用ip频率限制功能, 默认禁用
 limit_ip_enable = 0
 
@@ -258,8 +266,10 @@ limit_ip_limit_default = 3-10-30
 #实际上对memcache查询的键值为<B>abc</B>202.106.123.56<B>def</B>, 值为空则取limit_ip_limit_default的值.
 memcache_limit_ip_key_prefix = 
 memcache_limit_ip_key_suffix = 
+</pre>
 
-
+<br>
+<pre>
 #limit_sender_enable 是否启用sender频率限制功能, 默认禁用
 limit_sender_enable = 0
 
@@ -308,7 +318,7 @@ threshold = 0.7
 <pre>
 zcmd = libexec/anvil
 
-#如果多台电脑运行ip/sender频率限制服务,则只需在某一台服务器启用本服务.
+#如果多台电脑运行ip/sender频率限制服务,则只需(必须)在某一台服务器启用本服务.
 zlisten = 0:32506
 
 zproc_limit = 1
@@ -337,7 +347,258 @@ zwakeup = 3600
 ./libexec/spf_test 163.com  202.130.113.39
 </pre>
 
+<H2 id="spam_admin">spam_admin 管理工具使用说明</H2>
+
+<H3> 先看下USAGE</H3>
+<textarea class="code">
+$ ./libexec/spam_admin 
+USAGE:
+  ./libexec/spam_admin good        traindb                   eml_file/eml_dir
+  ./libexec/spam_admin bad         traindb                   eml_file/eml_dir
+  ./libexec/spam_admin test        db [ db2 [ ...]]          eml_file/eml_dir
+  ./libexec/spam_admin view        eml_file                                  
+  ./libexec/spam_admin segment     eml_file                                  
+  ./libexec/spam_admin charset     filename                                  
+  ./libexec/spam_admin merge_db    constdb_or_traindb        traindb         
+  ./libexec/spam_admin convert_db  traindb                   new_constdb
+</textarea>
+<ul>
+<li>good/bad/test/view/segment/charset/merge_db/convert_db 是第一个参数,表明功能.</li>
+<li>constdb 表示一个只读的数据库文件.</li>
+<li>traindb 表示个可写的数据库文件(sqlite3).</li>
+<li>eml_file 表示一个邮件文件.</li>
+<li>eml_dir 表示一个目录,其下(及递归子目录下)的文件为邮件</li>
+</ul>
+
+<H3>good: 训练正常信件</H3>
+<pre>
+./libexec/spam_admin good a.tdb ./a.eml
+./libexec/spam_admin good a.tdb /spam/emls/good/
+</pre>
+
+<H3>bad: 训练垃圾信件</H3>
+<pre>
+./libexec/spam_admin bad a.tdb ./b.eml
+./libexec/spam_admin bad a.tdb /spam/emls/bad/
+</pre>
+
+<H3>test: 测试信件得分</H3>
+<p>获得一个目录(/spam/emls/test/)下所有邮件的得分.
+<pre>
+./libexec/spam_admin test a.tdb /spam/emls/test/
+</pre>
+
+<p>获得一个目录(/spam/emls/test/)下所有邮件的得分, 更多反垃圾库.
+<pre>
+./libexec/spam_admin test a.tdb b.tdb c.tdb d.cdb e.cdb...  /spam/emls/test/
+</pre>
+
+<p>获得一个邮件的得分, 并且给出更详细的得分信息.
+<pre>
+./libexec/spam_admin test a.tdb b.tdb c.tdb d.cdb e.cdb...  /spam/emls/test/someone.eml
+</pre>
+
+<H3>view: 查看信件</H3>
+<p>解开一封信件, 返回非常详细的信件信息.
+包括主题,发件人,收件人,...,正文,附件名,...mime格式等.
+<br>并且会把可读信息信转为UTF-8
+<pre>
+./libexec/spam_admin view /somepath/somepath2/a.eml
+</pre>
+
+<H3>segment: 信件分词</H3>
+<p>对一封信件,做分词(切词)操作,查看分词结果,用于调试.
+<pre>
+./libexec/spam_admin segment /somepath/somepath2/a.eml
+</pre>
+
+<H3>merge_db: 合并数据库</H3>
+<p>把一个反垃圾数据库(既可以是constdb,也可以是traindb), 合并到一个traindb.
+<pre>
+./libexec/spam_admin merge_db a.cdb dest.tdb
+./libexec/spam_admin merge_db b.tdb dest.tdb
+</pre>
+<p>如果 dest.tdb不存在,会创建一个.
+
+<H3>convert_db: 数据库格式转换</H3>
+<p>把一个traindb转换为constdb.因为constdb比traindb快的多得多.
+<pre>
+./libexec/spam_admin convert_db a.tdb a.cdb
+</pre>
+<p>a.cdb如果不存在,则创建一个,否则被覆盖.
+
+<H2>维护反垃圾库的一些建议</H2>
+<p>先说明,本系统即可以实时训练邮件,也可以手动维护.
+<p>如果在单机系统且规模较小(如1000邮件用户内),可通过服务端口实时训练,问题不大.
+<p>如果在多机环境或规模很大,不建议实时训练,sqlite3的写性能会成为瓶颈.
+
+<h3>模型 1 (仅供参考)</h3>
+<pre>
+1. 下载最新版反垃圾库 命名为:A
+2. 维护一个文件夹,其中存放较老较固定的邮件(回馈的或收集的正常和垃圾邮件), 用spam_admin训练为反垃圾库 命名为: B
+    2.0 删除 B
+    2.1 ./spam_admin good B somepath1_or_file1
+        ......
+    2.2 ./spam_admin bad B somepath2_or_file2
+        ......
+3. 维护另一个文件夹,其中存放近期添加的邮件(回馈的或收集的正常和垃圾邮件), 用spam_admin训练为反垃圾库 命名为: C
+    3.0 同 第2条
+4. 用spam_admin 合并A B C 为一个新的<i>训练</i>库, 命名为: D
+    4.0 删除 D
+    4.1 ./spam_admin merge_db A D
+    4.2 ./spam_admin merge_db B D
+    4.3 ./spam_admin merge_db C D
+5. 用spam_admin 把 D 转换为只读库 E
+    5.1 ./spam_admin convert_db D E
+6. 移动 E 到 ./spamdb/const.db
+7. 重启系统即可. 或 使spamd程序<A href="#reloaddb">重新加载</A>反垃圾库.
+</pre>
+
+<H2>如何回馈/训练/喂养垃圾邮件和正常邮件</H2>
+<p>本节说的是如何在线操作. 非在线操作请参考 <A href="#spam_admin">spam_admin</A>
+<pre>
+1. 连接: <B>127.0.0.1:32502</B>
+2. 输入: <B><u>命令</u>[一个空格]邮件文件路径\n</B>
+3. 返回: <B>OK\n</B> 或 <B>ERR\n</B>
+4. 客户端关闭连接 或 回到 2
+</pre>
+<p>所谓 <b>"命令"</b> 包括: good, bad
+<p>所谓 <b>"邮件文件路径"</b> 形如 /opt/mail/storage/some1.eml
+<br>系统假设:客户端提供的任何文件都是邮件且可读.
+
+<H3>例子: 训练 邮件/opt/mail/storage/u2.eml 为正常邮件</H3> 
+<pre>
+输入: good /opt/mail/storage/u2.eml\n
+返回: OK\n 或: ERR\n
+</pre>
+
+
+<H3>例子: 训练 邮件/opt/mail/storage/u3.eml 为垃圾邮件</H3>
+<pre>
+输入: bad /opt/mail/storage/u3.eml\n
+返回: OK\n 或: ERR\n
+</pre>
+
+<H3>php 例子 -- 训练</H3>
+<textarea class="code">
+<?php
+$host = "localhost";
+$port = 32502;
+
+function train_do($fp, $good_or_bad, $eml_fn)
+{
+    fputs($fp, "$good_or_bad $eml_fn\n");
+    $data = @fgets($fp);
+
+    if($data === false)
+    {
+        return false;
+    }
+
+    $res = trim($data);
+    return $res;
+}
+
+if ($argc < 3)
+{
+    echo "USAGE: ",$argv[0]," good/bad eml_fn_list...\n";
+    die();
+}
+$good_or_bad = $argv[1];
+
+$fp = fsockopen($host, $port);
+if(!$fp)
+{
+    echo "can not open spamd at $host:$port\n";
+}
+
+for($i=2;$i<$argc;$i++)
+{
+    $result=train_do($fp, $good_or_bad, $argv[$i]);
+    echo $result, "\n";
+}
+</textarea>
+
+
+<H2 id="reloaddb">重新加载反垃圾库,而不重启服务</H2>
+<pre>
+1. 连接: <B>127.0.0.1:32502</B>
+2. 输入: <B><u>reloaddb</u>\n</B>
+3. 返回: <B>OK\n</B> 或 <B>系统异常,程序退出</B>
+</pre>
+
+<H2>如何识别垃圾邮件 --- 独立使用"内容过滤系统"</H2>
+<p>服务器的默认服务端口是 127.0.0.1:32502
+
+<H3>识别流程(通信协议)</H3>
+<pre>
+1. 连接: <B>127.0.0.1:32502</B>
+2. 输入: <B><u>score</u>[一个空格]邮件文件路径\n</B>
+3. 返回: <B>OK 得分 关键字\n</B>
+4. 客户端关闭连接 或 回到 2
+</pre>
+
+<p>所谓 <b>"邮件文件路径"</b> 形如 /opt/mail/storage/some1.eml
+<br>系统假设:客户端提供的任何文件都是邮件且可读.
+<p>所谓 <b>"得分"</b> 形如 0.700268, 介于0.000000 ~ 1.000000 之间,越接近1.0,是垃圾邮件的可能性越大.
+<br>根据得分,由使用者来最终确定是不是垃圾邮件.
+<br>根据作者实际经验,大于0.7的是垃圾邮件,小于0.4为正常邮件.
+<p>所谓<b>"关键字"</b>, 如果得分大于等于threshold则为"bad spam",否则为"good".
+
+<H3>例子: 邮件/opt/mail/storage/u1.eml 的得分</H3> 
+<pre>
+输入: <b>score /opt/mail/storage/u1.eml\n</b>
+返回: <b>OK 0.212383 good\n</b>
+</pre>
+
+<H3>php 例子 --- 得分</H3>
+<textarea class="code">
+<?php
+$host = "localhost";
+$port = 32502;
+$threshold_bad = 0.7;
+$threshold_good = 0.4;
+
+function get_score($fp, $eml_fn)
+{
+    global $threshold_bad, $threshold_good;
+
+    fputs($fp, "score $eml_fn\n");
+    $data = @fgets($fp);
+
+    if($data === false)
+    {
+        return Array("error", "");
+    }
+
+    $tmp = explode(' ' , trim($data));
+    $score = $tmp[0];
+    if($score > $threshold_bad)
+    {
+        return Array("bad", $score);
+    }
+    if($score < $threshold_good)
+    {
+        return Array("good", $score);
+    }
+    return Array("unknown", $score);
+}
+
+$fp = fsockopen($host, $port);
+if(!$fp)
+{
+    echo "can not open spamd at $host:$port\n";
+}
+
+for($i=1;$i<$argc;$i++)
+{
+    $result=get_score($fp, $argv[$i]);
+    echo $result[0], "\t", $result[1], " ", $argv[$i], "\n";
+}
+</textarea>
+
+
 <H2>相关文章</H2>
 <ul>
-    <li><A href="./honor-spam.html">HONOR-SPAM 中文邮件内容反垃圾识别系统</A></li>
+    <li><A href="./antispam-bayes.html">贝叶斯(Bayes)算法模型</A></li>
 </ul>
