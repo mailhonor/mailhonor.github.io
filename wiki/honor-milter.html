@@ -3,8 +3,8 @@ layout: wiki
 title: HONOR-MILTER 反垃圾邮件网关
 ---
 
-<p>honor-milter 是一款基于libmilter的过滤系统. honor-milter 支持中文反垃圾, 支持spf, 支持ip/mail和名单/发送频率, 支持clamav查毒引擎.
-
+<p>honor-milter 是一款基于libmilter的过滤系统.
+支持<B>中文反垃圾</B>, spf, ip黑名单/发送频率, mail黑名单/发送频率, 和 clamav查毒引擎.
 <p>内嵌<B>邮件内容反垃圾识别系统</B>,
 支持中文简体,繁体,日文,韩文,越南文,等文字.
 <br>信件解析快速,精确,兼容度高.强大的中文字符集识别模块.独特的分词系统.高效的反垃圾库系统.
@@ -308,6 +308,7 @@ concurrency_limit = 8
 spam_constdb = spamdb/const.db
 
 # 可写反垃圾库(用于训练，反馈）
+# 值为空,则忽略
 spam_traindb = spamdb/train.db
 
 #threshold #阈值, 参考值, 反垃圾得分大于等于threshold则给出关键字 <B>bad spam</B>, 否则给出关键字 <B>good</B>
