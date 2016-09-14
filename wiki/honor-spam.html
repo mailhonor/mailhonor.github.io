@@ -1,0 +1,236 @@
+---
+layout: wiki
+title: HONOR-MILTER 荣耀邮件内容过滤系统
+---
+
+<H2>基本介绍</H2>
+<p> 1, honor-spam是一款邮件打分系统,用于识别垃圾邮件.
+<br>支持中文简体,繁体,日文,韩文,越南文,等文字.
+<br>信件解析快速,精确,兼容度高.强大的中文字符集识别模块.独特的分词系统.高效的反垃圾库系统.
+<br>速度快,在基于dell vostro 2420(notebook)的vmware虚拟机上,单线程每秒处理1000封信件.
+
+<p>2, honor-spam不单独发布,随
+<A href="/wiki/honor-milter.html" target="_blank">HONOR-MILTER 反垃圾邮件网关</A>
+ 一起发布.
+
+<p>3, 内容过滤服务器./libexec/spamd, 配置文件./etc/service/spamd.cf, 默认服务端口是 127.0.0.1:36160
+
+<p>4, <B>./spamdb/const.db</B>和<B>./spamdb/train.db</B>是反垃圾库.
+<ul>
+    <li>./spamdb/const.db只读,高速.</li>
+    <li>./spamdb/train.db用于训练(回馈,喂养),速度较慢.</li>
+</ul>
+
+<H2>spamdc 工具使用说明</H2>
+
+<A id="spamdc"></A>
+<p>spamdc 是一个<B>在线的</B>反垃圾测试/回馈/调试工具.
+<pre>
+$ ./bin/spamdc 
+  ./bin/spamdc [ 127.0.0.1:36160 ] test     eml_file/eml_dir
+  ./bin/spamdc [ 127.0.0.1:36160 ] good     eml_file/eml_dir
+  ./bin/spamdc [ 127.0.0.1:36160 ] bad      eml_file/eml_dir
+  ./bin/spamdc [ 127.0.0.1:36160 ] reloaddb                           
+</pre>
+
+<H3>test: 测试信件得分</H3>
+<p>获得邮件 /spam/emls/test/aaa.eml, ./test/ffff/ppp.eml 的得分.
+<pre>
+./bin/spamdc test /spam/emls/test/aaa.eml
+./bin/spamdc test /spam/emls/test/
+</pre>
+
+<H3>good: 训练正常信件</H3>
+<pre>
+./bin/spamdc good /spam/emls/test/aaa.eml ./test/ffff/ppp.eml
+./bin/spamdc good /spam/emls/test/
+</pre>
+
+<H3>bad: 训练垃圾信件</H3>
+<pre>
+./bin/spamdc good /spam/emls/test/aaa.eml 
+./bin/spamdc good ./eml/tmp/
+</pre>
+
+<H3>reloaddb: 重新加载反垃圾库</H3>
+<pre>
+./bin/spamdc reloaddb
+</pre>
+
+
+<H2 id="spamc">spamc 工具使用说明</H2>
+
+<p>spamc 是一个<B>离线的</B>反垃圾测试/回馈/调试工具.辅助使用者更好的使用内容过滤系统.
+<pre>
+$ ./bin/spamc 
+USAGE:
+  ./bin/spamc test        db [ db2 [ ...]]          eml_file/eml_dir
+  ./bin/spamc good        traindb                   eml_file/eml_dir
+  ./bin/spamc bad         traindb                   eml_file/eml_dir
+  ./bin/spamc merge_db    constdb_or_traindb        traindb         
+  ./bin/spamc convert_db  traindb                   new_constdb
+</pre>
+<ul>
+<li>test/good/bad/merge_db/convert_db 是第一个参数,表明功能.</li>
+<li>constdb 表示一个只读的数据库文件.</li>
+<li>traindb 表示个可写的数据库文件(sqlite3).</li>
+<li>eml_file 表示一个邮件文件.</li>
+<li>eml_dir 表示一个目录,其下(及递归子目录下)的文件为邮件</li>
+</ul>
+
+<H3>test: 测试信件得分</H3>
+<p>获得一个目录(/spam/emls/test/)下所有邮件的得分.
+<pre>
+./bin/spamc test a.tdb /spam/emls/test/
+</pre>
+
+<p>获得一个目录(/spam/emls/test/)下所有邮件的得分,更多反垃圾库.
+<pre>
+./bin/spamc test a.tdb b.tdb c.tdb d.cdb e.cdb...  /spam/emls/test/
+</pre>
+
+<p>获得一个邮件的得分,并且给出更详细的得分信息.
+<pre>
+./bin/spamc test a.tdb b.tdb c.tdb d.cdb e.cdb...  /spam/emls/test/someone.eml
+</pre>
+
+<H3>good: 训练正常信件</H3>
+<pre>
+./bin/spamc good a.tdb ./a.eml
+./bin/spamc good a.tdb /spam/emls/good/
+</pre>
+
+<H3>bad: 训练垃圾信件</H3>
+<pre>
+./bin/spamc bad a.tdb ./b.eml
+./bin/spamc bad a.tdb /spam/emls/bad/
+</pre>
+
+<H3>merge_db: 合并数据库</H3>
+<p>把一个反垃圾数据库(既可以是constdb,也可以是traindb),合并到一个traindb.
+<pre>
+./bin/spamc merge_db a.cdb dest.tdb
+./bin/spamc merge_db b.tdb dest.tdb
+</pre>
+<p>如果 dest.tdb不存在,会创建一个.
+
+<H3>convert_db: 数据库格式转换</H3>
+<p>把一个traindb转换为constdb.因为constdb比traindb快的多得多.
+<pre>
+./libexec/spamc convert_db a.tdb a.cdb
+</pre>
+<p>a.cdb如果不存在,则创建一个,否则被覆盖.
+
+<H2>通信协议</H2>
+
+<H3>获取邮件得分和关键字</H3>
+<pre>
+1. 客户端 连接: <B>127.0.0.1:36160</B>
+2. 客户端 输入: <B><u>score</u>[一个空格]邮件文件路径\n</B>
+3. 服务端 返回: <B>OK 得分 关键字\n</B>
+4. 客户端 关闭连接 或 回到 2
+</pre>
+
+<p>1, 所谓 <b>"邮件文件路径"</b> 形如 /opt/mail/storage/some1.eml
+<br>系统假设:客户端提供的任何文件都是邮件且可读.
+
+<p>2, 所谓 <b>"得分"</b> 形如 0.700268,介于0.000000 ~ 1.000000 之间,越接近1.0,是垃圾邮件的可能性越大.
+<br>根据得分,由使用者来最终确定是不是垃圾邮件.
+<br>根据作者实际经验,大于0.7的是垃圾邮件,小于0.4为正常邮件.
+
+<p>3, 所谓<b>"关键字"</b>,如果得分大于等于antispam_threshold则为"bad spam",否则为"good".
+
+<p>4, 例子: 邮件/opt/mail/storage/u1.eml 的得分
+<pre>
+输入: <b>score /opt/mail/storage/u1.eml\n</b>
+返回: <b>OK 0.212383 good\n</b>
+</pre>
+
+<p>5, 可以通过 ./bin/spamdc 操作, 如
+<pre>
+./bin/spamdc test emlfile1
+</pre>
+
+
+<H3>回馈/训练/喂养垃圾邮件</H3>
+
+<p>本节说的是如何在线操作. 非在线操作请参考 <A href="#spamc">spamc</A>
+
+<pre>
+1. 客户端连接: <B>127.0.0.1:36160</B>
+2. 客户端输入: <B>bad[一个空格]邮件文件路径\n</B>
+3. 服务器返回: <B>OK\n</B> 或 <B>ERR\n</B>
+4. 客户端关闭连接 或 回到 2
+</pre>
+
+<p>1, 所谓 <b>"邮件文件路径"</b> 形如 /opt/mail/storage/some1.eml
+<br>系统假设:客户端提供的任何文件都是邮件且可读.
+
+<p>2, 例子: 训练 邮件/opt/mail/storage/u2.eml 为正常邮件
+<pre>
+输入: good /opt/mail/storage/u2.eml\n
+返回: OK\n 或: ERR\n
+</pre>
+
+<p>3, 例子: 训练 邮件/opt/mail/storage/u3.eml 为垃圾邮件
+<pre>
+输入: bad /opt/mail/storage/u3.eml\n
+返回: OK\n 或: ERR\n
+</pre>
+
+<p>4, 可以通过 ./bin/spamdc 操作, 如
+<pre>
+./bin/spamdc bad emlfile1
+</pre>
+
+<H3>回馈/训练/喂养正常邮件</H3>
+训练正常邮件和训练垃圾邮件类似,请参考上节,只不过把上节的关键字bad改为good即可.
+
+<p>
+
+<A id="reloaddb"></A>
+<H3>重新加载反垃圾库</H3>
+<p>在线更新const.db后,需要重启反垃圾服务器,没必要重启所有服务器.
+<pre>
+1. 连接: <B>127.0.0.1:36160</B>
+2. 输入: <B><u>reloaddb</u>\n</B>
+3. 返回: <B>OK\n</B> 或 <B>系统异常,程序退出</B>
+</pre>
+
+<p>可以通过 ./bin/spamdc 操作, 如
+<pre>
+./bin/spamdc reloaddb
+</pre>
+
+<H2>维护反垃圾库的一些建议</H2>
+<p>先说明,本系统即可以实时训练邮件,也可以手动维护.
+<p>如果在单机系统且规模较小(如1000邮件用户内),可通过服务端口实时训练,问题不大.
+<p>如果在多机环境或规模很大,不建议实时训练,sqlite3的写性能会成为瓶颈.
+
+<h3>模型 1 (仅供参考)</h3>
+<pre>
+1. 下载最新版反垃圾库 命名为:A
+2. 维护一个文件夹,其中存放较老较固定的邮件(回馈的或收集的正常和垃圾邮件),用spamc训练为反垃圾库 命名为: B
+    2.0 删除 B
+    2.1 ./bin/spamc good B somepath1_or_file1
+        ......
+    2.2 ./bin/spamc bad B somepath2_or_file2
+        ......
+3. 维护另一个文件夹,其中存放近期添加的邮件(回馈的或收集的正常和垃圾邮件),用spamc训练为反垃圾库 命名为: C
+    3.0 同 第2条
+4. 用spamc 合并A B C 为一个新的<i>训练</i>库,命名为: D
+    4.0 删除 D
+    4.1 ./bin/spamc merge_db A D
+    4.2 ./bin/spamc merge_db B D
+    4.3 ./bin/spamc merge_db C D
+5. 用spamc 把 D 转换为只读库 E
+    5.1 ./bin/spamc convert_db D E
+6. 移动 E 到 ./spamdb/const.db
+7. 重启系统即可. 或 <A href="#reloaddb">重新加载</A>反垃圾库.
+</pre>
+
+<H2>相关文章</H2>
+<ul>
+    <li><A href="./honor-milter.html">HONOR-MILTER 反垃圾邮件网关</A></li>
+    <li><A href="./antispam-bayes.html">贝叶斯(Bayes)算法模型</A></li>
+</ul>
