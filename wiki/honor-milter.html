@@ -63,7 +63,7 @@ if anyof (header :contains "X-honor-antispam" "spam")
 </pre>
 
 <H2>功能模块及配置</H2>
-<p>./etc/service/目录下的文件,是各个模块的配置文件.
+<p>./etc/service/目录下的文件,是各个模块的配置文件.(<A href="/wiki/libzc-config.html" target="_blank">一般配置文件风格</A>)
 <br>每个模块先加载./etc/main.cf,再加载自己的配置文件.
 
 
@@ -186,7 +186,7 @@ limit_ip_reject_reply = DENY. TOO MANY
 #发信频率限制的默认值
 limit_ip_limit_default = 3-10-30
 
-#查询表,结果是ip频率限制值,查询键是ip地址
+#查询表,结果是ip频率限制值,查询键是ip地址(<A href="/wiki/libzc-map.html" target="_blank">查询表更多知识</A>)
 limit_ip_limit_map = 
 
 #查询表,结果是ip频率限制值,查询键是ip地址前三段, 形如192.168.1
