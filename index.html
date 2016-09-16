@@ -1,7 +1,71 @@
----
-layout: wiki
-title: @荣耀邮件 --- 关注Linux平台邮件技术
----
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+<title>@荣耀邮件 --- 关注Linux平台邮件技术</title>
+<style type="text/css">
+html,body{height:101%;padding:0;margin:0;font-size:1em;font-family:"Microsoft Yahei";}
+.middle{margin:0 auto;max-width:770px;}
+A{text-decoration:none;color:#3399cc;}
+A:hover{text-decoration:underline;}
+H2{margin-top:2em;border-bottom:2px solid #666;}
+H3{margin:1em 0 5px 0;}
+UL,OL{margin:5px 0;}
+pre{border:1px solid #369369;border-radius:5px;padding:10px;margin:0;background-color:#f6f5f3;word-break:break-all;word-wrap:break-word;white-space:pre-wrap;font-family:Courier;margin:0;}
+p{margin:10px 0 1px 0;}
+#nav A{color:#000;}
+.listtb{border-spacing:0;width:100%;}
+.listtb td{border-bottom:1px dashed black;padding-top:0.3em;}
+.listtb tr:hover td{border-bottom:1px solid #d74c2e;}
+.title{background-color:#336699;padding:0.5em 0;color:#FFF;font-size:1.2em;font-weight:bold;}
+#lmemu_wrap{position:fixed;left:0px;width:350px;top:0;height:100%;overflow-x:hidden;border-right:1px dashed #879FAE;}
+#lmenu{margin:1em 0 3em 1em;}
+h2::first-letter,h3::first-letter,#lmenu B{color:#805d7c;}
+#lmenu A{color:#000;}
+.lmitem1{padding-left:1em;}
+#rmain{margin-left:355px;width:800px;}
+</style>
+<script src="http://apps.bdimg.com/libs/jquery/2.1.4/jquery.min.js"></script>
+<script>
+var duoshuoQuery={short_name:"mailhonor"};
+$(window).load(function(){
+$.each($("TEXTAREA.code"),function(i,o){o=$(o);o.after($("<pre></pre>").text(o.val())).hide();});
+
+var Ai=0,ai=0;
+$.each($("#con *"),function(i,o){var n=o.tagName.toLowerCase();if(n!="h2" && n!="h3")return;n=(n=="h2"?0:1);
+var A="ⅠⅡⅢⅣⅤⅥⅦⅧⅨⅩⅪⅫ",a="ⓐⓑⓒⓓⓔⓕⓖⓗⓘⓙⓚⓛ",O;
+$(o).before($("<A id='amenu_"+i+"'></A>"));
+O=$("<span class='lmitem"+(n?1:0)+"'></span>");O.append('<B>'+(n?a[ai]:A[Ai])+' </B>');
+O.append($("<A href='#amenu_"+i+"'></A>").text($(o).text()));
+$("#lmenu").append($("<nobr></span>").append(O)).append('<br>');
+$(o).html((n?a[ai]:A[Ai])+" "+$(o).html());if(!n){Ai++;ai=0;}else ai++;
+});
+
+Ai=window.location.href.split("/").slice(3).join("/").toLowerCase();
+if (Ai!="" &&  Ai!="index.html"){
+$("#bottom2").html($("#bottom").html());
+$(".ds-thread").attr("data-thread-key","/"+Ai);
+$.getScript("http://static.duoshuo.com/embed.js");
+}
+});
+</script>
+</head>
+<body>
+<div id="lmemu_wrap"><table height="100%"><tr><td height="100%"><div id="lmenu"></div></td></tr></table></div>
+
+<div id="rmain">
+<table id="nav" cellpadding="0" cellspacing="0" width="100%" class="middle"><tr>
+<td><A href="/">@荣耀邮件<small> --- 关注Linux平台邮件技术</small></A></td><td align="right">
+<A href="/">我的项目</A>
+</td></tr></table>
+
+<br>
+<div class="title"><div class="middle">@荣耀邮件<small> --- 关注Linux平台邮件技术</small></div></div>
+
+<div class="middle">
+<div id="con" style="word-break:break-all;">
+
 
 <div>
 <dl>
@@ -39,3 +103,21 @@ title: @荣耀邮件 --- 关注Linux平台邮件技术
 </dd>
 </dl>
 </div>
+
+</div>
+<br>
+<div id="bottom"><div style="text-align:right;border-top:2px solid black;">
+&copy; 2016 <A href="/">HOME</A>
+&nbsp; <A href="/help.html">CONTACT</A>
+&nbsp; <A href="#nav">TOP</A>
+</div></div>
+
+<br>
+<div class="ds-thread"></div>
+
+<br>
+<div id="bottom2"></div>
+<br><br><br>
+</div></div>
+</body>
+</html>
