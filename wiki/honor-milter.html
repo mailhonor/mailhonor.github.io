@@ -28,7 +28,7 @@ title: HONOR-MILTER 反垃圾邮件网关
 
 <H3>启动/停止/重启</H3>
 <pre>
-./libexec/honor_milter.sh start/stop/reload/restart
+./bin/honor_milter.sh start/stop/reload/restart
 </pre>
 
 <H3>适配 postfix</H3>
@@ -345,12 +345,12 @@ zproc_limit = 1
 <H3 id="spf_test">spf检测工具</H3>
 <p>./bin/spf_test 用于检查一个域名和一个ip是否匹配spf,用法:
 <pre>
-./libexec/spf_test domain ip
+./bin/spf_test domain ip
 </pre>
 <p>例子
 <pre>
-./libexec/spf_test 263.net 211.157.147.5
-./libexec/spf_test 163.com  202.130.113.39
+./bin/spf_test 263.net 211.157.147.5
+./bin/spf_test 163.com  202.130.113.39
 </pre>
 
 
