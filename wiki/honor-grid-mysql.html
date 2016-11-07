@@ -1,0 +1,419 @@
+---
+layout: wiki
+title: HONOR-GRID后台MYSQL
+---
+
+<A id="pa" href="/wiki/honor-grid.html">HONOR-GRID异步IMAP/POP服务器</A>
+
+<H2>前言</H2>
+<p>一般来说,各种开源webmail都是通过imap协议访问邮件,这涉及到邮件的各种显示包括主题,发件人,正文,等等.
+<p>如果能直接操作mysql则会方便很多
+<p>HONOR-GRID几乎所有功能都可以通过操作mysql实现.
+<p>除本文提到的方法,任何mysql写操作可能会出现逻辑错误.
+<p>下面所有的mysql操作,都必须启用事务.
+<p>本文涉及到的文件夹的名字都是 <B>UTF7-IMAP</B> 编码.
+<p>本文提到两个文件夹 Linux, UNIX, Linux的uidvalidity为123, UNIX的uidvalidity为778.
+<p>假设操作的帐号为 q1@t.com,这个帐号的user_id为2.
+<BR>文件夹可以理解为论坛的板块, uidvalidity可以理解为板块的id.
+
+<h2>常见需求</h2>
+
+<h3>帐号添加,删除,属性</h3>
+
+<h4>CREATE TABLE `grid_user`</h4>
+<pre>
+CREATE TABLE `grid_user` (
+ `user_id` int unsigned AUTO_INCREMENT NOT NULL,
+ `mail` char(128) NOT NULL DEFAULT '', 
+  /* 已用空间大小 */
+ `storage_used` bigint NOT NULL DEFAULT '0',
+  /* 邮件数 */
+ `messages` int NOT NULL DEFAULT '0',
+ `uidvalidity_inbox` int unsigned NOT NULL DEFAULT '1',
+ `uidvalidity_next` int unsigned NOT NULL DEFAULT '1',
+ PRIMARY KEY (`user_id`),
+ UNIQUE KEY `mail` (`mail`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+</pre>
+
+<h4>添加帐号 q1@t.com</h4>
+<p>方法一,调用存储过程 grid_add_user.
+同时会给这个帐号添加一些预设的子邮箱,包括: INBOX, Sent, Drafts, Junk, Trash.
+<pre>
+begin;
+call grid_add_user("q1@t.com");
+commit;
+</pre>
+
+<p>方法二,实际上是上面的grid_add_user的实现.
+<pre>
+begin;
+INSERT IGNORE INTO grid_user SET mail="q1@t.com", uidvalidity_next=UNIX_TIMESTAMP(), uidvalidity_inbox=uidvalidity_next+1;
+call grid_add_folder_by_mail("q1@t.com", "INBOX");
+call grid_add_folder_by_mail("q1@t.com", "Sent");
+call grid_add_folder_by_mail("q1@t.com", "Drafts");
+call grid_add_folder_by_mail("q1@t.com", "Junk");
+call grid_add_folder_by_mail("q1@t.com", "Trash");
+commit;
+</pre>
+
+<h4>删除帐号 q1@t.com</h4>
+<pre>
+begin;
+DELETE FROM grid_user WHERE mail="q1@t.com";
+commit;
+</pre>
+
+<h4>获取帐号 q1@t.com 属性信息</h4>
+<pre>
+begin;
+/* storage_used: 账号下所有邮件大小之和, messages: 账号下所有邮件数量 */
+SELECT storage_used, messages FROM grid_user WHERE user="q1@t.com";
+commit;
+</pre>
+
+<h3>文件夹创建,删除,改名,属性</h3>
+
+<h4>CREATE TABLE `grid_folder`</h4>
+<pre>
+CREATE TABLE `grid_folder` (
+ `user_id` int(11) unsigned NOT NULL DEFAULT '0',
+  /* 文件夹的id, 帐号下唯一, 不变. 可以理解为论坛板块的id */
+ `uidvalidity` int(11) unsigned NOT NULL DEFAULT '0' COMMENT 'uidvalidity',
+  /* 文件夹名, 编码是UTF7-IMAP. php语言可以使用 mb_convert_encoding 转码 */
+ `folder` varchar(512) NOT NULL DEFAULT 'UTF7-IMAP',
+  /* 本文件夹下下一个邮件的id(可能) */
+ `uidnext` int(11) NOT NULL DEFAULT '1' COMMENT '',
+  /* 本文件夹下邮件数 */
+ `messages` int(11) NOT NULL DEFAULT '0' COMMENT '',
+  /* 本文件夹下未读邮件数 */
+ `unseen` int(11) NOT NULL DEFAULT '0' COMMENT '',
+  /* 是否被订阅 */
+ `subscribed` tinyint(1) NOT NULL DEFAULT '1' COMMENT '',
+ `recent_uid` int(11) NOT NULL DEFAULT '0' COMMENT '',
+ PRIMARY KEY (`user_id`,`uidvalidity`),
+ UNIQUE KEY (`user_id`,`folder`),
+ KEY `mb_uv` (`user_id`,`uidvalidity`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1 PARTITION BY LINEAR KEY(user_id) PARTITIONS 2;
+</pre>
+
+<h4>创建文件夹 Linux</h4>
+<pre>
+begin;
+call grid_add_folder(2, "Linux");
+/* 或 call grid_add_folder_by_mail("q1@t.com", "Linux"); */
+commit;
+</pre>
+
+<h4>删除文件夹 Linux</h4>
+<pre>
+begin;
+DELETE FROM grid_folder WHERE user_id="2" AND folder="Linux";
+/* 或 DELETE FROM grid_folder WHERE user_id="2" AND uidvalidity=123;*/
+commit;
+</pre>
+
+<h4>文件夹Linux改名为UNIX</h4>
+<pre>
+begin;
+UPDATE grid_folder SET folder="UNIX" WHERE user_id="2" AND folder="Linux";
+/* 比如存在 文件夹Linux/debian, Linux/ubuntu/ebuntu, 下面这句效果就是改名为
+   UNIX/debina, UNIX/ubuntu/ebuntu
+   下句的数字 6 意思是 strlen("Linux") + 1
+ */
+UPDATE grid_folder SET folder=CONCAT("<B>UNIX</B>",SUSTRING(folder,<B>6</B>)) WHERE user_id=2 AND (folder like "<B>Linux</B>/%");
+commit;
+</pre>
+
+<h4>获取文件夹 Linux 属性信息</h4>
+<pre>
+/* messages: 邮件数量, unseen: 未读邮件数量, subscribed: 文件夹是否订阅, recent_uid: 下小节单说 */
+SELECT messages,unseen,subscribed,recent_uid FROM grid_folder WHERE user="q1@t.com" AND folder="Linux";
+</pre>
+
+<h4>新信计算</h4>
+<p> recent_uid: 为了获得文件夹下所谓"新信"数量,一个动态的uid值.原理就不讲了.有兴趣的话可以看rfc3501
+<p>如果想或得Linux下所谓的新信数量,这么写SQL
+<pre>
+/* 下文的 RECENT_UID 替换为相应的整数(上节得到recent_uid) */
+SELECT count(*) FROM grid_mail WHERE user="q1@tcom" AND uidvalidity=123 AND (uid &gt; RECENT_UID);
+</pre>
+
+<p><B><i>注意</i></B>, 如果做了文件夹下邮件列表这个功能后,按rfc3501,个文件下新信应该为0,需要更新recent_uid
+<pre>
+UPDATE grid_folder SET recent_uid=uidnext-1 WEHRE user="q1@tcom" AND uidvalidity=123;
+</pre>
+
+<h3>邮件删除,复制,移动</h3>
+
+<h4>新邮件</h4>
+<p>直接操作mysql做不到
+
+<h4>删除邮件</h4>
+<p>在文件夹Linux下删除uid为1990的邮件
+<pre>
+begin;
+DELETE FROM grid_mail WHERE user_id=2 AND uidvalidity=123 AND uid=1990;
+commit;
+</pre>
+
+<h4>复制邮件</h4>
+<p>在文件夹Linux下uid为1990的邮件复制到UNIX下.
+<pre>
+begin;
+UPDATE grid_folder SET uidnext=uidnext+<B>1</B> WHERE (user_id=2) AND (uidvalidity=778);
+SELECT uidnext FROM grid_folder WHERE (user_id=2) AND (uidvalidity=778);
+/* 假设上一句得到是: 339 */
+call grid_copy_mail(2, 123, 1990, 778, 338);
+/* call grid_copy_mail(user_id, from_uidvalidiy, from_uid, to_uidvalidity, to_nextuid); */
+commit;
+</pre>
+<p>在文件夹Linux下uid为1990,1992的邮件复制到UNIX下.
+<pre>
+begin;
+UPDATE grid_folder SET uidnext=uidnext+<B>2</B> WHERE (user_id=2) AND (uidvalidity=778);
+SELECT uidnext FROM grid_folder WHERE (user_id=2) AND (uidvalidity=778);
+/* 假设上一句得到是: 339 */
+call grid_copy_mail(2, 123, 1990, 778, 337);
+call grid_copy_mail(2, 123, 1992, 778, 338);
+/* call grid_copy_mail(user_id, from_uidvalidiy, from_uid, to_uidvalidity, to_nextuid); */
+commit;
+</pre>
+<p>为什么作者不提供一个存储过程来复制邮件? 理由如下:
+<br>移动一封可以实现,比如名为 _copy_mail
+<br>移动多封需要多次执行_copy_mail, 则实际上要多次执行(上面)UPDATE和SELECT语句.耗费资源啊.
+
+<h4>移动邮件</h4>
+<p>所有的操作都和"复制邮件"一样,除了把grid_copy_mail改为grid_move_mail.
+<p>注意:imap协议没移动邮件的命令.
+
+
+<H3>邮件,显示,主题,发件人,...,正文,附件</H3>
+
+<h4>CREATE TABLE `grid_mail`</h4>
+<pre>
+CREATE TABLE `grid_mail` (
+ `user_id` int(11) unsigned NOT NULL DEFAULT '0',
+ `uidvalidity` int(11) unsigned NOT NULL DEFAULT '0' COMMENT 'uidvalidity',
+ `uid` int(11) unsigned NOT NULL DEFAULT '0' COMMENT '信件ID',
+ /* 下面这个几个_flag,单列一节介绍 */
+ `deleted_flag` tinyint(1) NOT NULL DEFAULT '0' COMMENT '',
+ `answered_flag` tinyint(1) NOT NULL DEFAULT '0' COMMENT '',
+ `seen_flag` tinyint(1) NOT NULL DEFAULT '0' COMMENT '',
+ `draft_flag` tinyint(1) NOT NULL DEFAULT '0' COMMENT '',
+ `flagged_flag` tinyint(1) NOT NULL DEFAULT '0' COMMENT '',
+ `forwarded_flag` tinyint(1) NOT NULL DEFAULT '0' COMMENT '',
+ `receipt_sent_flag` tinyint(1) NOT NULL DEFAULT '0' COMMENT '',
+ `attachment_flag` tinyint(1) NOT NULL DEFAULT '0' COMMENT '',
+  /* 邮件大小 */
+ `size` int(11) unsigned NOT NULL DEFAULT '0' COMMENT 'eml size',
+  /* 邮件头 Message-id, 不包括两端的&lt;&gt; */
+ `message_id` char(64) NOT NULL DEFAULT '' COMMENT '',
+  /* 进入本系统时间, UNIX时间 */
+ `arrive_date` int(11) unsigned NOT NULL DEFAULT '0' COMMENT '',
+  /* 邮件会话ID, 单列一节介绍 */
+ `conversation_id` bigint unsigned NOT NULL DEFAULT '0' COMMENT '',
+  /* 邮件主题, 可读, UTF-8编码 */
+ `subject` BLOB NOT NULL DEFAULT '' COMMENT '',
+  /* 邮件体中的Date, UNIX时间 */
+ `date` int(11) unsigned NOT NULL DEFAULT '0' COMMENT '',
+  /* 发件人, 一行字符串, 格式为 "email name\n", 例子, "abc@ddd.com 我是 中 文名字\n"  */
+ `from` BLOB NOT NULL DEFAULT '' COMMENT '',
+  /* 收件人列表, 格式为多行, 每行如上 */
+ `to` BLOB NOT NULL DEFAULT '' COMMENT '',
+  /* 抄送人列表, 同上 */
+ `cc` BLOB NOT NULL DEFAULT '' COMMENT '',
+  /* 暗送人列表, 同上 */
+ `bcc` BLOB NOT NULL DEFAULT '' COMMENT '',
+  /* 如果这封信件请求收条,这收条发给谁 */
+ `receipt` BLOB NOT NULL DEFAULT '' COMMENT '',
+  /* imap协议数据 */
+ `envelope_output` BLOB NOT NULL DEFAULT '' COMMENT '',
+  /* imap协议数据 */
+ `structure_output` BLOB NOT NULL DEFAULT '' COMMENT '',
+  /* imap协议数据 */
+ `structure_body_output` BLOB NOT NULL DEFAULT '' COMMENT '',
+  /* imap协议数据 */
+ `section` BLOB NOT NULL DEFAULT '' COMMENT '',
+  /* 所谓的邮件正文 */
+ `views` LONGBLOB NOT NULL DEFAULT '' COMMENT ' of readable parts',
+  /* 附件名列表 */
+ `atts` BLOB NOT NULL DEFAULT '' COMMENT '',
+ `tnef_flag` tinyint NOT NULL DEFAULT '0' COMMENT '',
+  /* 正文摘要, 未使用, webmail自己填充吧 */
+ `digest` BLOB NOT NULL DEFAULT '' COMMENT '',
+  /* 邮件头的内容id号, 对应文件系统上相应的文件 */
+ `header_id` bigint unsigned NOT NULL DEFAULT 0 COMMENT '',
+  /* 邮件头大小 */
+ `header_size` int(11) unsigned NOT NULL DEFAULT '0' COMMENT 'header size',
+  /* 信件体的内容id号, 对应文件系统上相应的文件 */
+ `body_id` bigint unsigned NOT NULL DEFAULT 0 COMMENT '',
+
+  /* 下面是索引, 根据需求自己再添加吧,作者提示:加太多索引得不偿失 */
+ PRIMARY KEY (`user_id`,`uidvalidity`,`uid`),
+ KEY `uid` (`user_id`,`uidvalidity`,`uid`),
+ KEY `conversation_id` (`user_id`,`conversation_id`)
+  /* InnoDB 引擎, 为了事务性, CHARSET别动, 关于分区单列一节说明 */
+) ENGINE=InnoDB DEFAULT CHARSET=latin1 PARTITION BY LINEAR KEY(user_id) PARTITIONS 2;
+</pre>
+
+<h4>邮件标记</h4>
+<p>imap协议默认有5个标记,分别和mysql表格grid_mail中列对应,grid_mail还有几个扩展的标记位.取值为0或1
+<table class="listtb">
+<tr>
+    <td width="150"><B>IMAP标记</B></td>
+    <td width="200"><B>grid_mail列</B></td>
+    <td><B>备注</B></td>
+</tr>
+<tr>
+    <td>\Answered</td>
+    <td>answered_flag</td>
+    <td>已回标记</td>
+</tr>
+<tr>
+    <td>\Seen</td>
+    <td>seen_flag</td>
+    <td>已读标记</td>
+</tr>
+<tr>
+    <td>\Draft</td>
+    <td>draft_flag</td>
+    <td>草稿标记</td>
+</tr>
+<tr>
+    <td>\Flagged</td>
+    <td>flagged_flag</td>
+    <td>星标</td>
+</tr>
+<tr>
+    <td>\Deleted</td>
+    <td>deleted_flag</td>
+    <td>已删除标记</td>
+</tr>
+<tr>
+    <td>&nbsp;</td>
+    <td>forwarded_flag</td>
+    <td>是否转发过,留给webmail的</td>
+</tr>
+<tr>
+    <td>&nbsp;</td>
+    <td>receipt_sent_flag</td>
+    <td>如果这封信件被要求回执,是否回执过,留给webmail的</td>
+</tr>
+<tr>
+    <td>&nbsp;</td>
+    <td>attachment_flag</td>
+    <td>是否有附件,只读</td>
+</tr>
+<tr>
+    <td>&nbsp;</td>
+    <td>tnef_flag</td>
+    <td>是否是outlook发出的带winmail.dat的信件,只读</td>
+</tr>
+</table>
+
+<h4>邮件正文</h4>
+<p>正文存储在grid_mail的 views 字段
+<p>数据格式
+<pre>
+MIME类型 正文长度\n正文\nMIME类型 正文长度\n正文\n...
+</pre>
+<p>MIME类型: 如 text/html, text/html, text/calendar, ...
+<p>正文长度: 10进制数, 如 123, 1988, 998761
+<p>正文: 字符集为 UTF-8
+
+<p><i>说明</i>: 如果信体格式是 multipart/alternative, 则首选html, 上面的views已经选择好.
+
+<h4>发件人</h4>
+<p>发件人(From:)存储在 grid_mail 的 from 字段
+<p>数据格式
+<pre>
+邮件地址 名字\n
+</pre>
+<p>邮件地址: 小写
+<p>名字: 注意名字可能包含空格
+
+<h4>收件人,抄送人,暗送人</h4>
+<p>收件人(To:), 抄送人(Cc:), 暗送人(Bcc:) 分别存储在 grid_mail 的 to, cc, bcc 字段
+<p>数据格式
+<pre>
+邮件地址 名字\n邮件地址 名字\n...
+</pre>
+
+<h4>存信时间,信头时间</h4>
+<p>存信时间,信头时间(Date:) 分别存储在 grid_mail 的 arrive_date, date 字段
+<p>数据格式, 都是10进制 unix时间
+
+<h4>大小</h4>
+<p>邮件大小,邮件头大小 分别存储在 grid_mail 的 size, header_size 字段
+<p>则信体大小为 size - header_size
+
+<h4>附件名列表</h4>
+<p>附件名列表存储在 grid_mail 的 atts 字段
+<p>数据格式
+<pre>
+section 偏移 长度 编码 字符集 content-id 附件名\n...
+</pre>
+<p>section: imap/mime协议中"部分"的编号, 形如: 2.1, 1.01, 1.6.1 3.1. 
+<p><i>PS:通过imap协议下载附件,需要提供section</i>
+<p>偏移: 这个附件在内容id为body_id的文件中的偏移量
+<p>长度: 如上,文件的长度
+<p>编码: b:base64, q:quoted-printable, N:没编码或为BIT8
+<p>字符集: 如 gbk, utf-8, ..
+<p>content-id: 这个附件mime部分的头 Content-ID
+<p>附件名: 注意名字可能包含空格
+
+<h4>附件名列表(TNEF)</h4>
+<p>接上一节
+<p>如果邮件是tnef格式,则
+<p>section中含有字母t, 形如: 2.3t5, 5.1.2t12. t前面为真正的section, t后面为tnef部分的附件id
+<p>偏移,长度,为解开这个tnef附件后的相关属性
+
+<h2>信件存储</h2>
+<p>一封信件被分为信头+信体,分别独立存储在文件系统上.
+<p>每个信头或信体都有一个id号,既mysql_mail中的header_id 和 body_id
+<p>如果内容id为 199821,则存储路径为: ./var/mail/9821/199821,其中9821 = 199821%10000
+<p>如果下载一封信件(header_id:912, body_id:817623)
+<br>除了通过imap协议外,可以通过文件系统直接访问,既文件./var/mail/912/912 和 ./var/mail/7623/817623
+
+<h2>会话邮件</h2>
+<p>什么是会话邮件? 作者认为的"会话邮件"是:
+<BR><B>由一封信件开始,所有对其的转发/回复,再次转发/回复,...,这些所有的信件组成一个会话.</B>
+<p>会话邮件跨邮箱
+
+<h4>表格grid_mail_conversation</h4>
+<pre>
+CREATE TABLE `grid_mail_conversation` (
+ `user_id` int(11) unsigned NOT NULL DEFAULT '0',
+ `conversation_id` bigint unsigned NULL DEFAULT '0' COMMENT '',
+ `reference_id` char(64) NULL DEFAULT '0' COMMENT '',
+ PRIMARY KEY (`user_id`,`reference_id`),
+ KEY `nscr_mc` (`user_id`,`conversation_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=latin1 PARTITION BY LINEAR KEY(user_id) PARTITIONS 2;
+</pre>
+<p>PS: 涉及到 grid_mail中字段 conversation_id.特别提醒注意, 这个conversation_id不是一个固定值
+
+<h4>获取会话列表</h4>
+<p>获取q1@t.com下message-id为abcdefgxxxx-someyyy@gogo.com的信件的同会话邮件列表
+<pre>
+SELECT uidvalidity,uid,subject FROM grid_mail LEFT JOIN grid_mail_conversation on (grid_mail.user_id=grid_mail_conversation.user_id AND grid_mail.conversation_id=grid_mail_conversation.conversation_id) WHERE grid_mail_conversation.user_id=<B>2</B> AND grid_mail_conversation.reference_id="abcdefgxxxx-someyyy@gogo.com";
+</pre>
+
+<h2>MYSQL性能优化</h2>
+<p>本文不讨论MYSQL的集群,读写分离等话题.
+
+<h4>分区</h4>
+<p>见dev/mysql/1.0.sql:
+<pre>ENGINE=InnoDB DEFAULT CHARSET=latin1 PARTITION BY LINEAR KEY(user_id) PARTITIONS 2;</pre>
+<p>默认分区数为2, 可以适当调整. 如: 30个帐号1个分区.比如1000个帐号分区设置为30 
+
+<h4>配置优化</h4>
+<pre>
+[mysqld]
+#innodb_buffer_pool_size 设置为空闲内存的80%
+innodb_buffer_pool_size=512M
+innodb_flush_method=O_DIRECT
+innodb_flush_log_at_trx_commit=2
+innodb_file_per_table=1
+</pre>
+

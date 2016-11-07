@@ -3,10 +3,10 @@
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
 <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-<title>@荣耀邮件 --- 关注Linux平台邮件技术</title>
+<title>@荣耀邮件 --- Linux平台邮件技术</title>
 <style type="text/css">
 html,body{height:101%;padding:0;margin:0;font-size:1em;font-family:"Microsoft Yahei";}
-.middle{margin:0 auto;max-width:770px;}
+.middle{margin:0 auto;padding:0 1em;}
 A{text-decoration:none;color:#3399cc;}
 A:hover{text-decoration:underline;}
 H2{margin-top:2em;border-bottom:2px solid #666;}
@@ -24,7 +24,7 @@ p{margin:10px 0 1px 0;}
 h2::first-letter,h3::first-letter,#lmenu B{color:#805d7c;}
 #lmenu A{color:#000;}
 .lmitem1{padding-left:1em;}
-#rmain{margin-left:355px;width:800px;}
+#rmain{margin-left:355px;max-width:1200px;}
 </style>
 <script src="http://apps.bdimg.com/libs/jquery/2.1.4/jquery.min.js"></script>
 <script>
@@ -34,20 +34,13 @@ $.each($("TEXTAREA.code"),function(i,o){o=$(o);o.after($("<pre></pre>").text(o.v
 
 var Ai=0,ai=0;
 $.each($("#con *"),function(i,o){var n=o.tagName.toLowerCase();if(n!="h2" && n!="h3")return;n=(n=="h2"?0:1);
-var A="ⅠⅡⅢⅣⅤⅥⅦⅧⅨⅩⅪⅫ",a="ⓐⓑⓒⓓⓔⓕⓖⓗⓘⓙⓚⓛ",O;
+var A="ⅠⅡⅢⅣⅤⅥⅦⅧⅨⅩⅪⅫ",a="ⓐⓑⓒⓓⓔⓕⓖⓗⓘⓙⓚⓛⓙⓚ ⓛ ⓜⓝⓞⓟⓠⓡ ⓢⓣⓤⓥⓦⓧ ⓨⓩ",O;
 $(o).before($("<A id='amenu_"+i+"'></A>"));
 O=$("<span class='lmitem"+(n?1:0)+"'></span>");O.append('<B>'+(n?a[ai]:A[Ai])+' </B>');
 O.append($("<A href='#amenu_"+i+"'></A>").text($(o).text()));
 $("#lmenu").append($("<nobr></span>").append(O)).append('<br>');
 $(o).html((n?a[ai]:A[Ai])+" "+$(o).html());if(!n){Ai++;ai=0;}else ai++;
 });
-
-Ai=window.location.href.split("/").slice(3).join("/").toLowerCase();
-if (Ai!="" &&  Ai!="index.html"){
-$("#bottom2").html($("#bottom").html());
-$(".ds-thread").attr("data-thread-key","/"+Ai);
-$.getScript("http://static.duoshuo.com/embed.js");
-}
 });
 </script>
 </head>
@@ -55,13 +48,14 @@ $.getScript("http://static.duoshuo.com/embed.js");
 <div id="lmemu_wrap"><table height="100%"><tr><td height="100%"><div id="lmenu"></div></td></tr></table></div>
 
 <div id="rmain">
+<br>
 <table id="nav" cellpadding="0" cellspacing="0" width="100%" class="middle"><tr>
-<td><A href="/">@荣耀邮件<small> --- 关注Linux平台邮件技术</small></A></td><td align="right">
-<A href="/">我的项目</A>
+<td><A href="/">@荣耀邮件<small> --- Linux平台邮件技术</small></A></td><td align="right">
+〖<span id="plink"><A href="/">首页</A<span>〗</span>
 </td></tr></table>
 
 <br>
-<div class="title"><div class="middle">@荣耀邮件<small> --- 关注Linux平台邮件技术</small></div></div>
+<div class="title"><div class="middle">@荣耀邮件<small> --- Linux平台邮件技术</small></div></div>
 
 <div class="middle">
 <div id="con" style="word-break:break-all;">
@@ -73,7 +67,7 @@ $.getScript("http://static.duoshuo.com/embed.js");
 <dt><H3><A href="/wiki/honor-milter.html">HONOR-MILTER 反垃圾邮件网关</A></H3></dt>
 <dd>
 <p>honor-milter 是一款基于libmilter的过滤系统.
-支持<B>中文反垃圾</B>, spf, ip黑名单/发送频率, mail黑名单/发送频率, 和 clamav查毒引擎.
+<p>支持<B>中文反垃圾</B>, spf, ip黑名单/发送频率, mail黑名单/发送频率, 和 clamav查毒引擎.
 
 <p>内嵌<B>邮件内容反垃圾识别系统</B>,
 支持中文简体,繁体,日文,韩文,越南文,等文字.
@@ -83,14 +77,20 @@ $.getScript("http://static.duoshuo.com/embed.js");
 <p>支持postfix, sendmail
 </dd>
 
-<dt><H3>HONOR-GRID异步IMAP服务器</H3></dt>
+<dt><H3><A href="/wiki/honor-grid.html">HONOR-GRID异步IMAP/POP服务器</A></H3></dt>
 <dd>
-<p>一个IMAP的服务器,基于epool,全异步模型,高并发.后台存储支持插件,目前支持mysql(既所有的邮件数据全部存储在mysql上).
+<p>一个IMAP/POP服务器. 开源:
+<A href="https://github.com/mailhonor/honor-grid" target="_blank">https://github.com/mailhonor/honor-grid</A>
+<BR>后台存储支持插件,目前支持mysql+file(既所有的邮件数据全部存储在mysql+文件系统上).
+<BR>基于epool,全异步模型,高并发.
+<BR>邮件存储支持去重.
+<BR>mysql后台,支持邮件会话(类似gmail)
+<BR>所有webmail用的到的都已经存储在mysql中, 包括 主题,发件人,附件名,正文...,并全部转为utf-8编码.
 </dd>
 
 <dt><H3><A href="/wiki/libzc.html">LIBZC通用C扩展库</A></H3></dt>
 <dd>
-<p>LIBZC是一个通用的C扩展库, 开源
+<p>LIBZC是一个通用的C扩展库. 开源
 <A href="https://github.com/mailhonor/libzc" target="_blank">https://github.com/mailhonor/libzc</A>
 <BR>对io,socket,dns,alarm,time,string,ssl,file,stream,log做了封装
 <BR>argv,array,chain,dict,idict,grid,igrid,kvlist等容器
@@ -119,7 +119,7 @@ $.getScript("http://static.duoshuo.com/embed.js");
 <div id="bottom"><div style="text-align:right;border-top:2px solid black;">
 &copy; 2016 <A href="/">HOME</A>
 &nbsp; <A href="/help.html">CONTACT</A>
-&nbsp; <A href="#nav">TOP</A>
+&nbsp; <A href="#rmain">TOP</A>
 </div></div>
 
 <br>

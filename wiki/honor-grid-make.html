@@ -1,0 +1,33 @@
+---
+layout: wiki
+title: HONOR-GRID从源码编译
+---
+
+<A id="pa" href="/wiki/honor-grid.html">HONOR-GRID异步IMAP/POP服务器</A>
+
+<p>honor-grid 在linux64位环境编译运行, C开发. 
+<p>编译的目标是得到安装包<B>honor_grid.tgz</B>,也可以直接下载安装包:<i>稍等...</i>
+
+<H3>依赖的库</H3>
+<p>libzc: <A href="./libzc.html" target="_blank">帮助文档</A>,
+<A href="https://github.com/mailhonor/libzc" target="_blank">源码https://github.com/mailhonor/libzc</A>,
+编译libzc, 得到libzc.a libzc.h 备用
+<p>系统库: mysqlclient, ssl, pam, 等
+
+<H3>下载源码</H3>
+<pre>
+git clone https://github.com/mailhonor/honor-grid.git
+cd honor-grid
+</pre>
+
+<H3>编译过程</H3>
+复制上面的 libzc.a, libzc.h 到honor-grid目录
+<pre>
+make
+</pre>
+
+<p>打包
+<pre>
+make tgz
+</pre>
+<p>得到 honor_grid.tgz
