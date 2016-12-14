@@ -63,7 +63,7 @@ if anyof (header :contains "X-honor-antispam" "spam")
 </pre>
 
 <H2>功能模块及配置</H2>
-<p>./etc/service/目录下的文件,是各个模块的配置文件.(<A href="/wiki/libzc-config.html" target="_blank">一般配置文件风格</A>)
+<p>./etc/service/目录下的文件,是各个模块的配置文件.
 <br>每个模块先加载./etc/main.cf,再加载自己的配置文件.
 
 
@@ -186,7 +186,7 @@ limit_ip_reject_reply = DENY. TOO MANY
 #发信频率限制的默认值
 limit_ip_limit_default = 3-10-30
 
-#查询表,结果是ip频率限制值,查询键是ip地址(<A href="/wiki/libzc-map.html" target="_blank">查询表更多知识</A>)
+#查询表,结果是ip频率限制值,查询键是ip地址 <A href="#map_config">查询表配置</A>
 limit_ip_limit_map = 
 
 #查询表,结果是ip频率限制值,查询键是ip地址前三段, 形如192.168.1
@@ -310,7 +310,7 @@ zproc_limit = 1
 </tr>
 <tr>
     <td><B>./bin/map_search</B></td>
-    <td>map查询表命令行工具,<A href="/wiki/libzc-map.html">参考</A></td>
+    <td>map查询表命令行工具</td>
 </tr>
 <tr>
     <td><B>./libexec/master</B></td>
@@ -353,7 +353,127 @@ zproc_limit = 1
 ./bin/spf_test 163.com  202.130.113.39
 </pre>
 
+<H3 id="map_config">查询表</H3>
 
+<p> 支持查询表,效果类似postfix的查询表机制. 支持类型包括 memcache,redis,socket,postproxy,flat,line,static
+
+<H4>memcache</H4>
+<p> 配置语法为:
+<pre>
+memcache://192.168.0.1:11211?prefix=前缀&amp;suffix=后缀
+</pre>
+<p>如查询年关键字为<B>eevp</B>, 则memcache的键值为 <B>前缀eevp后缀</B>, 命令行为:
+<pre>
+get <B>前缀eevp后缀</B>
+</pre>
+
+<H4>redis</H4>
+<p> 配置语法为:
+<pre>
+redis://192.168.1.99:8008?key=键值
+</pre>
+<p>如查询年关键字为<B>eevp</B>, 则相当于redis的hash命令中的hget, 命令行为:
+<pre>
+hget <B>键值 前缀eevp后缀</B>
+</pre>
+
+<H4>socket</H4>
+<p> 配置语法为:
+<pre>
+socket://192.168.1.99:8008?module=模块
+</pre>
+<p>如查询年关键字为<B>eevp</B>, 则相当于socket通信:
+<pre>
+<B>模块 eevp\r\n</B>
+</pre>
+<p>返回值为:
+<pre>
+#有查询结果
+200 查询 ... ... 结果\r\n
+</pre>
+<p>或
+<pre>
+#没有查询结果
+500\r\n
+</pre>
+<p>或
+<pre>
+#出错
+400 错误 ... ... 信息\r\n
+</pre>
+
+<H4>flat</H4>
+<p> 配置语法为:
+<pre>
+flat:///somepath/some.../someflat.txt
+</pre>
+<p>someflat.txt是一个text文件,内容形如
+<pre>
+abc abc_value
+键名 键值
+城市 北京
+爱好 linux   等等
+</pre>
+<p>即, 第一列为查询值,其余为结果.
+<p>flat查询表速度快.后台会把someflat.txt加载到内存,生成一个词典.如果修改了someflat.txt则需要重新加载.
+
+<H4>line</H4>
+<p> 配置语法为:
+<pre>
+line://192.168.1.99:8008
+</pre>
+<p>如查询年关键字为<B>eevp</B>, 则相当于socket通信:
+<pre>
+<B>eevp\r\n</B>
+</pre>
+<p>返回值为:
+<pre>
+#查询结果
+查询 ... ... 结果\r\n
+</pre>
+
+<H4>static</H4>
+<p> 配置语法为:
+<pre>
+static://返回值
+</pre>
+<p>查询任何关键字,返回结果都是固定的: "返回值"
+
+<H4>postproxy</H4>
+<p>postproxy支持postfix的查询表类型,类似postfix的proxy方式
+<p> 配置语法为:
+<pre>
+postproxy:/var/spool/postfix/private/postmap:postfix查询表
+</pre>
+<p>postfix有查询表
+<pre>
+proxy:mysql:/etc/postfix/some_mysql_table.cf
+</pre>
+<p>则可配置为:
+<pre>
+postproxy:///var/spool/postfix/private/postmap?dictname=mysql:/etc/postfix/some_mysql_table.cf
+</pre>
+
+<p>当然也可以这么用(小技巧),在postfix的master.cf中配置,增加
+<pre>
+192.168.1.99:20028  inet  -       -       n       -       -       proxymap
+ -oproxy_read_maps=mysql:/etc/postfix/some_mysql_table.cf,...,,,,
+</pre>
+<p>则,我们可以这么利用postfix查询表
+
+<pre>
+postproxy://192.168.1.99:20028?dictname=mysql:/etc/postfix/some_mysql_table.cf
+</pre>
+
+<H3>map_search测试工具</H3>
+<p>map_search是一个map查询表测试工具,用法
+<pre>
+./map_search -m "查询表1,查询表2,..." -q 查询值
+</pre>
+<p>例子,查询<B>eevp</B> :
+<pre>
+./map_search -m "memcache://127.0.0.1:11211" -q eevp
+</pre>
 <H2>相关文章</H2>
 <ul>
     <li><A href="./honor-spam.html">HONOR-SPAM 荣耀邮件内容过滤系统</A></li>

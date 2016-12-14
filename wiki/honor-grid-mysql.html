@@ -379,7 +379,7 @@ section 偏移 长度 编码 字符集 content-id 附件名\n...
 <h2>会话邮件</h2>
 <p>什么是会话邮件? 作者认为的"会话邮件"是:
 <BR><B>由一封信件开始,所有对其的转发/回复,再次转发/回复,...,这些所有的信件组成一个会话.</B>
-<p>会话邮件跨邮箱
+<p>会话邮件跨文件夹
 
 <h4>表格grid_mail_conversation</h4>
 <pre>
@@ -394,9 +394,9 @@ CREATE TABLE `grid_mail_conversation` (
 <p>PS: 涉及到 grid_mail中字段 conversation_id.特别提醒注意, 这个conversation_id不是一个固定值
 
 <h4>获取会话列表</h4>
-<p>获取q1@t.com下message-id为abcdefgxxxx-someyyy@gogo.com的信件的同会话邮件列表
+<p>获取q1@t.com下message-id为<B>abcdefgxxxx-someyyy@gogo.com</B>的信件的同会话邮件列表
 <pre>
-SELECT uidvalidity,uid,subject FROM grid_mail LEFT JOIN grid_mail_conversation on (grid_mail.user_id=grid_mail_conversation.user_id AND grid_mail.conversation_id=grid_mail_conversation.conversation_id) WHERE grid_mail_conversation.user_id=<B>2</B> AND grid_mail_conversation.reference_id="abcdefgxxxx-someyyy@gogo.com";
+SELECT uidvalidity,uid,subject FROM grid_mail LEFT JOIN grid_mail_conversation on (grid_mail.user_id=grid_mail_conversation.user_id AND grid_mail.conversation_id=grid_mail_conversation.conversation_id) WHERE grid_mail_conversation.user_id=<B>2</B> AND grid_mail_conversation.reference_id="<B>abcdefgxxxx-someyyy@gogo.com</B>";
 </pre>
 
 <h2>MYSQL性能优化</h2>
@@ -405,7 +405,7 @@ SELECT uidvalidity,uid,subject FROM grid_mail LEFT JOIN grid_mail_conversation o
 <h4>分区</h4>
 <p>见dev/mysql/1.0.sql:
 <pre>ENGINE=InnoDB DEFAULT CHARSET=latin1 PARTITION BY LINEAR KEY(user_id) PARTITIONS 2;</pre>
-<p>默认分区数为2, 可以适当调整. 如: 30个帐号1个分区.比如1000个帐号分区设置为30 
+<p>默认分区数为2, 可以适当调整. 比如1000个帐号分区设置为30 
 
 <h4>配置优化</h4>
 <pre>
