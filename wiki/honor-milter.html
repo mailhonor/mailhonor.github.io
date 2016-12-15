@@ -355,7 +355,7 @@ zproc_limit = 1
 
 <H3 id="map_config">查询表</H3>
 
-<p> 支持查询表,效果类似postfix的查询表机制. 支持类型包括 memcache,redis,socket,postproxy,flat,line,static
+<p> 支持查询表,效果类似postfix的查询表机制. 支持类型包括 memcache,redis,socket,flat,line,static
 
 <H4>memcache</H4>
 <p> 配置语法为:
@@ -438,32 +438,6 @@ line://192.168.1.99:8008
 static://返回值
 </pre>
 <p>查询任何关键字,返回结果都是固定的: "返回值"
-
-<H4>postproxy</H4>
-<p>postproxy支持postfix的查询表类型,类似postfix的proxy方式
-<p> 配置语法为:
-<pre>
-postproxy:/var/spool/postfix/private/postmap:postfix查询表
-</pre>
-<p>postfix有查询表
-<pre>
-proxy:mysql:/etc/postfix/some_mysql_table.cf
-</pre>
-<p>则可配置为:
-<pre>
-postproxy:///var/spool/postfix/private/postmap?dictname=mysql:/etc/postfix/some_mysql_table.cf
-</pre>
-
-<p>当然也可以这么用(小技巧),在postfix的master.cf中配置,增加
-<pre>
-192.168.1.99:20028  inet  -       -       n       -       -       proxymap
- -oproxy_read_maps=mysql:/etc/postfix/some_mysql_table.cf,...,,,,
-</pre>
-<p>则,我们可以这么利用postfix查询表
-
-<pre>
-postproxy://192.168.1.99:20028?dictname=mysql:/etc/postfix/some_mysql_table.cf
-</pre>
 
 <H3>map_search测试工具</H3>
 <p>map_search是一个map查询表测试工具,用法
