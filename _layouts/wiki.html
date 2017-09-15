@@ -6,7 +6,7 @@
 <title>{{page.title}}</title>
 <style type="text/css">
 html,body{height:101%;padding:0;margin:0;font-size:1em;font-family:"Microsoft Yahei";}
-.middle{margin:0 auto;padding:0 1em;}
+.middle{margin:0 auto;padding:0 1em;width:900px;}
 A{text-decoration:none;color:#3399cc;}
 A:hover{text-decoration:underline;}
 H2{margin-top:2em;border-bottom:2px solid #666;}
@@ -19,12 +19,6 @@ p{margin:10px 0 1px 0;}
 .listtb td{border-bottom:1px dashed black;padding-top:0.3em;}
 .listtb tr:hover td{border-bottom:1px solid #d74c2e;}
 .title{background-color:#336699;padding:0.5em 0;color:#FFF;font-size:1.2em;font-weight:bold;}
-#lmemu_wrap{position:fixed;left:0px;width:350px;top:0;height:100%;overflow-x:hidden;border-right:1px dashed #879FAE;}
-#lmenu{margin:1em 0 3em 1em;}
-h2::first-letter,h3::first-letter,#lmenu B{color:#805d7c;}
-#lmenu A{color:#000;}
-.lmitem1{padding-left:1em;}
-#rmain{margin-left:355px;max-width:1200px;}
 </style>
 <script src="http://apps.bdimg.com/libs/jquery/2.1.4/jquery.min.js"></script>
 <script>
@@ -32,18 +26,7 @@ var duoshuoQuery={short_name:"mailhonor"};
 $(window).load(function(){
 $.each($("TEXTAREA.code"),function(i,o){o=$(o);o.after($("<pre></pre>").text(o.val())).hide();});
 
-var Ai=0,ai=0;
-$.each($("#con *"),function(i,o){var n=o.tagName.toLowerCase();if(n!="h2" && n!="h3")return;n=(n=="h2"?0:1);
-var A="ⅠⅡⅢⅣⅤⅥⅦⅧⅨⅩⅪⅫ",a="ⓐⓑⓒⓓⓔⓕⓖⓗⓘⓙⓚⓛⓙⓚ ⓛ ⓜⓝⓞⓟⓠⓡ ⓢⓣⓤⓥⓦⓧ ⓨⓩ",O;
-$(o).before($("<A id='amenu_"+i+"'></A>"));
-O=$("<span class='lmitem"+(n?1:0)+"'></span>");O.append('<B>'+(n?a[ai]:A[Ai])+' </B>');
-O.append($("<A href='#amenu_"+i+"'></A>").text($(o).text()));
-$("#lmenu").append($("<nobr></span>").append(O)).append('<br>');
-$(o).html((n?a[ai]:A[Ai])+" "+$(o).html());if(!n){Ai++;ai=0;}else ai++;
-});
-
-Ai=$("#pa").get(0);if(Ai)$("#plink").empty().append(Ai);
-
+var Ai=$("#pa").get(0);if(Ai)$("#plink").empty().append(Ai);
 Ai=window.location.href.split("/").slice(3).join("/").toLowerCase();
 $("#bottom2").html($("#bottom").html());
 $(".ds-thread").attr("data-thread-key","/"+Ai);
