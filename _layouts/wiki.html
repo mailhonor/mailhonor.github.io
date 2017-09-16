@@ -22,27 +22,18 @@ p{margin:10px 0 1px 0;}
 </style>
 <script src="http://apps.bdimg.com/libs/jquery/2.1.4/jquery.min.js"></script>
 <script>
-var duoshuoQuery={short_name:"mailhonor"};
 $(window).load(function(){
 $.each($("TEXTAREA.code"),function(i,o){o=$(o);o.after($("<pre></pre>").text(o.val())).hide();});
-
-var Ai=$("#pa").get(0);if(Ai)$("#plink").empty().append(Ai);
-Ai=window.location.href.split("/").slice(3).join("/").toLowerCase();
-$("#bottom2").html($("#bottom").html());
-$(".ds-thread").attr("data-thread-key","/"+Ai);
-$.getScript("http://static.duoshuo.com/embed.js");
 });
 </script>
 </head>
 <body>
-<div id="lmemu_wrap"><table height="100%"><tr><td height="100%"><div id="lmenu"></div></td></tr></table></div>
-
 <div id="rmain">
 <br>
-<table id="nav" cellpadding="0" cellspacing="0" width="100%" class="middle"><tr>
+<div class="middle"><table id="nav" cellpadding="0" cellspacing="0" width="100%"><tr>
 <td><A href="/">@荣耀邮件<small> --- Linux平台邮件技术</small></A></td><td align="right">
 〖<span id="plink"><A href="/">首页</A></span>〗
-</td></tr></table>
+</td></tr></table></div>
 
 <br>
 <div class="title"><div class="middle">{{page.title}}</div></div>
@@ -57,11 +48,6 @@ $.getScript("http://static.duoshuo.com/embed.js");
 &nbsp; <A href="#rmain">TOP</A>
 </div></div>
 
-<br>
-<div class="ds-thread"></div>
-
-<br>
-<div id="bottom2"></div>
 <br><br><br>
 </div></div>
 </body>
