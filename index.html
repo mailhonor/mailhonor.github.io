@@ -2,25 +2,60 @@
 <HTML lang="zh-CN">
 <HEAD>
 <META http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-<TITLE>Linux平台邮件技术 --- 闭门造车,出门合辙</TITLE>
+<TITLE>Linux平台邮件技术</TITLE>
 <style type="text/css">
-html,body{height:101%;padding:0;margin:0;font-size:16px;font-family:arial, tahoma, SimSun, sans-serif;}
-#main{max-width:900px; margin: 0 auto;}
-A{text-decoration:none;color:#3399cc;}
-A:hover{text-decoration:underline;}
-UL,OL{margin:5px 0;}
-P{margin:10px 0 1px 0;}
+html,body{height:101%;padding:0;margin:0;font-size:16px;font-family:arial,tahoma,SimSun,sans-serif;}
+DIV.title *{color:#000000;}H1,H2{color:#CC00CC;}H3{color:#996600;}
+A{text-decoration:none;color:#3399cc;}A:hover{text-decoration:underline;}
+LI{margin:5px 0;}P{margin:10px 0 1px 0;}DIV.hr{border-top:1px solid black;margin:20px 0;}
+DIV.con{margin:20px auto;width:1000px;}DIV.main,DIV.foot{padding-bottom:50px;}
 </style>
+<script>function init(){var e; try{var o=document.getElementById("a_antisapm_doc");o.innerHTML=o.href;o=document.getElementById("a_antisapm_demo");o.innerHTML=o.href;}catch(e){}}</script>
 </HEAD>
-<BODY><DIV ID="main">
-<H2><A HREF="https://blog.csdn.net/eli960/article/details/90110987" TARGET="_blank">HONOR-SPAM 荣耀邮件内容过滤系统</A></H2>
-<P>honor-spam是一款基于内容的邮件打分系统,用于识别垃圾邮件. <A HREF="/honor-spam/demo.html">在线效果演示</A>
-<P>支持中文简体,繁体,日文,韩文,越南文,等文字.
-<P>信件解析快速,精确,兼容度高.内嵌中文乱码识别模块.自研快速只读文本数据库.
-<P>识别速度快,单线程每秒处理1000封信件.
-<P> <BR> <BR> <BR>
-<HR/>
-<P><A HREF="https://blog.csdn.net/eli960" TARGET="_blank">我的博客</A> &nbsp; EMAIL: eli960@qq.com &nbsp; QQ: 1537212398 &nbsp; <A HREF="https://github.com/mailhonor" TARGET="_blank">GITHUB.COM 提供技术支持</A>
+<BODY onload="init();"><DIV CLASS="con">
+<DIV CLASS="title"><A HREF="/" TARGET="_blank">Linux平台邮件技术<small> --- 闭门造车,出门合辙</small></A></DIV>
+</DIV>
+</DIV><DIV CLASS="hr"></DIV><DIV CLASS="con main">
 
+<H2>基于内容的垃圾邮件识别</H2>
+<UL>
+<LI>网址: <A HREF="./antispam/" TARGET="_blank" ID="a_antisapm_doc">doc</A></LI>
+<LI>基于邮件内容的打分系统,用于识别垃圾邮件</LI>
+<LI>支持中文简体,繁体,日文,韩文,越南文,等文字</LI>
+<LI>速度快,在基于dell vostro(notebook)的vmware虚拟机上,单线程每秒处理1000封信件</LI>
+<LI>特征库更新及时,有免费版: <A HREF="http://pan.baidu.com/s/1hrfROqw" TARGET="_blank">http://pan.baidu.com/s/1hrfROqw</A></LI>
+<LI>在线效果演示: <A HREF="./antispam/demo.html" TARGET="_blank" ID="a_antisapm_demo">demo</A></LI>
+</UL>
+
+<H2>LIB-ZC --- 基于GLIBC的通用 C 扩展库</H2>
+<UL>
+<LI>网址: <A HREF="https://gitee.com/linuxmail/lib-zc#readme_md" TARGET="_blank">https://gitee.com/linuxmail/lib-zc</A></LI>
+<LI>异步IO开发框架, 特色:读一行回调,读指定字节回调</LI>
+<LI>协程开发框架, 支持锁,条件,文件IO,慢操作</LI>
+<LI>IO管道(代理)库, 协程风格和异步IO风格</LI>
+<LI>服务器开发框架,服务进程管理框架</LI>
+<LI>MIME邮件解析库, TNEF解析库</LI>
+<LI>JSON库</LI>
+<LI>HTTP服务器</LI>
+<LI>REDIS(集群)客户端库, MEMCACHE客户端库</LI>
+<LI>常见数据结构和容器 BUF, ARGV, LIST, VECTOR, RBTREE, DICT, MAP等</LI>
+<LI>封装了流(stream),支持OPENSSL
+<LI>常用IO, 超时IO, TCP SOCKET, DNS封装</LI>
+<LI>通用配置, 通用命令行, 通用日志</LI>
+<LI>OPENSSL封装, 初始化, 线程安全, 超时操作</LI>
+<LI>全新constdb库</LI>
+<LI>SQLITE3代理服务器/客户端封装</LI>
+<LI>序列号, CHROOT, ... 等等</LI>
+</UL>
+
+<H2>LIB-ZO --- Linux平台 C 协程库</H2>
+<UL>
+<LI>网址: <A HREF="https://gitee.com/linuxmail/lib-zo#readme_md" TARGET="_blank">https://gitee.com/linuxmail/lib-zo</A></LI>
+<LI>从LIB-ZC整理,单独发布</LI>
+<LI>支持锁,条件, 文件IO协程化,支持慢(阻塞)操作协程化</LI>
+</UL>
+
+</DIV><DIV CLASS="hr"></DIV><DIV CLASS="con foot">
+<A HREF="https://gitee.com/linuxmail/" TARGET="_blank">我的项目</A> &nbsp; EMAIL: eli960@qq.com &nbsp; QQ: 1537212398 &nbsp; <A HREF="https://github.com/" TARGET="_blank">GITHUB.COM 提供技术支持</A>
 </DIV></BODY>
 </HTML>

@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<HTML lang="zh-CN">
+<HEAD>
+<META http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<TITLE>Linux平台邮件技术</TITLE>
+<style type="text/css">
+html,body{height:101%;padding:0;margin:0;font-size:16px;font-family:arial,tahoma,SimSun,sans-serif;}
+DIV.title *{color:#000000;}H1,H2{color:#CC00CC;}H3{color:#996600;}
+A{text-decoration:none;color:#3399cc;}A:hover{text-decoration:underline;}
+LI{margin:5px 0;}P{margin:10px 0 1px 0;}DIV.hr{border-top:1px solid black;margin:20px 0;}
+.tbview{margin:0;border-collapse:collapse;border-spacing:0;border:1px solid #669933;}
+.tbview>tbody>tr>td{padding:5px 8px;border:1px solid #669933;}
+PRE.code{border-left:1px solid #CCC;padding:10px;}
+DIV.con{margin:20px auto;width:1000px;}DIV.main,DIV.foot{padding-bottom:50px;}
+</style>
+</HEAD>
+<BODY><DIV CLASS="con">
+<DIV CLASS="title"><A HREF="/" TARGET="_blank">Linux平台邮件技术<small> --- 闭门造车,出门合辙</small></A></DIV>
+</DIV>
+</DIV><DIV CLASS="hr"></DIV><DIV CLASS="con main">
+
+<H1>基于内容的垃圾邮件识别 -- 帮助文档</H1>
+<P>HONOR-SPAM 是一款邮件打分系统,用于识别垃圾邮件. 最新版本2.5
+<P>支持中文简体,繁体,日文,韩文,越南文,等文字
+<P>速度快,在基于dell vostro(notebook)的vmware虚拟机上,单线程每秒处理1000封信件
+<P><A HREF="./demo.html" TARGET="_blank">在线识别垃圾邮件</A>
+
+<H2>下载/安装/特征库/服务</H2>
+
+<H3>下载免费版程序和特征库</H3>
+<P>最新版2.5 <A HREF="http://pan.baidu.com/s/1hrfROqw" TARGET="_blank">http://pan.baidu.com/s/1hrfROqw</A>
+
+<H3>安装程序</H3>
+<P>创建目录/opt/honor_mail/, 进入其中,解开honor_spam.tgz 即可 <i>(只支持64位Linux系统, debian/ubuntu/centos)</i>
+
+<H3>更新特征库</H3>
+<P>下载最新版 const-(version).db.gz(建议备份), 解开得到 const.db, 移动到 ./var/spamdb/const.db
+
+<H2>服务启动/停止/重启</H2>
+<P>./bin/master.sh start/stop/reload
+
+<H2>文件目录说明</H2>
+
+<H3 width="150">/opt/honor_mail/</H3>
+<P>系统默认安装路径, 所有服务运行时路径
+
+<H3>./etc/service/spamd.cf</H3>
+<P>反垃圾服务程序的配置文件
+
+<H3>./bin/master.sh</H3>
+<P>启动/停止/重启 脚本
+
+<H3>./bin/spamc</H3>
+<P>工具,用于 训练,得分,测试,合并</P>
+
+<H3>./bin/spamd</H3>
+<P>反垃圾服务程序
+
+<H3>./var/socket/spamd</H3>
+<P>domain socket, spamd 服务的domain socket
+
+<H3>./var/spamdb/reloaddb_event_file</H3>
+<P>touch ./var/spamdb/reloaddb_event_file 会使spamd重新加载特征库文件
+
+<H2>配置 etc/service/spamd.cf</H2>
+<PRE CLASS="code">
+server-command = bin/spamd
+server-service = spamd://var/socket/spamd
+# 并发进程数
+server-proc-count = 1
+
+server-log = syslog,mail
+
+# 每进程并发线程数
+honor_bayes_concurrency_limit = 0
+
+honor_bayes_service_name = spamd
+
+#特征库文件,可以是多个
+#honor_bayes_db = var/spamdb/const.db,var/spamdb/const2.db,var/spamdb/const9.db
+honor_bayes_db = var/spamdb/const.db
+
+# touch var/spamdb/reloaddb_event_file, 会导致spamd重新加载特征库(var/spamdb/const.db)
+honor_bayes_reloaddb_event_file = var/spamdb/reloaddb_event_file
+
+# 序列号
+honor_spam_license = A1CDB1FCE50BBA9F
+</PRE>
+
+<H2>spamc 工具使用说明</H2>
+<P>spamc 是反垃圾测试/回馈/调试工具; 包括子命令 score, ham, spam, convert_db, merge_db
+<P>下文提到的
+<UL>
+<LI>a.db, b.db, ... train.db, const.db 是特征库文件, train.db 特指训练用特征库(bdb)</LI>
+<LI>a.eml, b.eml, ... 是邮件文件</LI>
+<LI>eml_path1, eml_path2, ... 是目录, 其下的所有文件都是邮件文件</LI>
+</UL>
+
+<H3>score 测试信件得分, 离线</H3>
+<P>例子: 获得邮件a.eml, b.eml和eml_path1下所有邮件 的得分
+<UL>
+  <LI>./bin/spamc score ./a.db,./b.db,./c.db a.eml b.eml emlpath1</LI>
+  <LI>./bin/spamc score ./a.db a.eml b.eml emlpath1</LI>
+</UL>
+
+<H3>score 测试信件得分, 在线</H3>
+<P>例子: 获得邮件a.eml, b.eml, 和 eml_path1下所有邮件 的得分
+<UL>
+<LI>./bin/spamc score ./var/socket/spamd a.eml b.eml emlpath1</LI>
+<LI>./bin/spamc score ./var/socket/spamd a.eml b.eml emlpath1</LI>
+</UL>
+
+<H3>ham 训练正常信件, 离线</H3>
+<P>例子: 训练a.eml, b.eml, c.eml, eml_path1, eml_path2 下所有的邮件为正常邮件
+<UL>
+<LI>./bin/spamc ham ./train.db a.eml b.eml eml_path1</LI>
+<LI>./bin/spamc ham ./train.db c.eml eml_path2</LI>
+<LI>@提示, train.db 可以不存在, 程序会自动创建, train.db是bdb格式, 不能用const格式</LI>
+</UL>
+
+<H3>spam 训练垃圾邮件, 离线</H3>
+<P>例子: 训练 x.eml, y.eml, z.eml, eml_path8, eml_path9 下所有的邮件为垃圾邮件
+<UL>
+<LI>./bin/spamc ham ./train.db x.eml z.eml eml_path9</LI>
+<LI>./bin/spamc ham ./train.db y.eml</LI>
+<LI>./bin/spamc ham ./train.db eml_path8</LI>
+</UL>
+
+<H3>merge_db 合并数据库, 离线</H3>
+<P>例子: 合并a.db, b.db, c.db 到 train.db
+<UL>
+<LI>./bin/spamc convert_db a.db train.db</LI>
+<LI>./bin/spamc convert_db b.db train.db./bin/spamc convert_db c.db train.db</LI>
+</UL>
+
+<H3>convert_db 数据库格式转换, 离线</H3>
+<P>例子: 把train.db 转换为const.db, <i>const.db是系统自带的只读数据库格式(速度快)</i>
+<UL>
+<LI>./bin/spamc convert_db const.db train.db</LI>
+</UL>
+
+<H2>spamd服务, domain socket协议</H2>
+<PRE CLASS="code">
+客户端 连接 domain socket 文件 ./var/socket/spamd
+客户端 输入 score[一个空格]邮件文件路径\r\n
+服务端 返回
+  OK[一个空格]得分\r\n
+  ERR[一个空格]db\r\n
+客户端 关闭连接 或 回到 2
+</PRE>
+<P># 所谓 “邮件文件路径” 形如 /opt/mail/storage/some1.eml
+<P># 系统假设:客户端提供的任何文件都是邮件且可读.
+
+<P># 所谓 “得分” 形如 0.700268,介于0.000000 ~ 1.000000 之间,越接近1.0,是垃圾邮件的可能性越大.
+<P># 根据作者实际经验,大于0.7的是垃圾邮件,小于0.4为正常邮件.
+
+<H2>版本历史</H2>
+
+<H3>2.5	2019-08</H3>
+<P>增加特征分析
+
+<H3>2.1	2019-05</H3>
+<P>行为特征分析, 更多特征
+
+<H3>1.12	2017-06</H3>
+<P>html处理, 增加打分机制, 初级图片处理
+
+<H3>0.9	2015-12</H3>
+<P>多字节文字乱码识别, 分词技巧调整, 全新邮件解析库, 增加特征词判定词
+
+<H3>0.1	2007-10</H3>
+<P>贝叶斯统计, 中文分词, 繁体, 日文, 韩文, 正向最大匹配, 邮件解析
+
+
+</DIV><DIV CLASS="hr"></DIV><DIV CLASS="con foot">
+<A HREF="https://gitee.com/linuxmail/" TARGET="_blank">我的项目</A> &nbsp; EMAIL: eli960@qq.com &nbsp; QQ: 1537212398 &nbsp; <A HREF="https://github.com/" TARGET="_blank">GITHUB.COM 提供技术支持</A>
+</DIV></BODY>
+</HTML>
