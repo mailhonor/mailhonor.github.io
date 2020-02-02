@@ -59,22 +59,7 @@ function splitUpload(as) {
       reader.onloadend = function() { R.ajaxSendAsBinary(this.result); };
       var e; try{reader.readAsArrayBuffer(blob);}catch(e){R._error=1;R._completed=1;R._on_error(R);}
     }
-    if (R.file_data_begin>0) {_do(R); return R;}else{
-      if (!R.enable) { R._on_cancel(R); return R;}
-      R.file_data_end = R.file_data_begin + R.block_size;
-      if (R.file_data_end > R.file_size){R.file_data_end = R.file_data_begin + R.file_size%R.block_size; }
-      var blob = R._file.slice(R.file_data_begin, R.file_data_end);
-      var reader = new FileReader();
-      reader.onloadend = function(){ var r=this.result.toLowerCase();
-        function f(k) { return (r.indexOf("\n"+k+":")>-1?1:0);}
-        if(f("from")+f("to")+f("subject")+f("message-id")+f("date")<2){
-          R._format=1;R._error=1;R._completed=1;R._on_error(R);return;
-        }
-        _do(R);
-      }
-      var e; try{reader.readAsBinaryString(blob);}catch(e){R._error=1;R._completed=1;R._on_error(R);}
-      return R;
-    }
+    _do(R); return R;
   }
   R.start = function() { this.do_upload(); }
   R.ajaxSendAsBinary = function(blob) {
@@ -98,7 +83,7 @@ function human_size(a){ var v=parseInt(a/(1024*1024)), s=a%(1024*1024)+"0000";re
 function create_tr(fo) {
   var tr=$('<tr class="itr"><td></td><td></td><td></td><td></td></tr>').get(0); $("#listtb tr:first").after(tr);
   var o=$(tr).find("td");
-  tr.td_score=o.get(0);tr.td_name=o.get(1);tr.td_progress=o.get(2);tr.td_del=o.get(3);tr.fo=fo;
+  tr.td_score=o.get(0);tr.td_name=o.get(1);tr.td_del=o.get(2);tr.fo=fo;
   $(tr.td_name).text(fo.name+"("+human_size(fo.size)+"M)");
   tr.upload_enable=1;
   $('<span class="bt">删除</span>').appendTo(tr.td_del).click(function(){
@@ -109,35 +94,45 @@ function create_tr(fo) {
 
 function upload_one_by_one(trs){
   function upload_next(trs){setTimeout(function(){upload_one_by_one(trs);},10);}
-  function upload_error(tr,R) {if(R&&R._format){$(tr.td_score).html('<font color="red">EML信件?</font>');}
-    $(tr.td_progress).text("失败");}
+  function upload_error(tr,R) { $(tr.td_score).text("失败");}
   function upload_cancel(tr) {  }
 
   if (trs.length==0){return;} var tr=trs.pop();
   if (tr.upload_enable==0){upload_next(trs); return;}
-  if (tr.fo.size > 1024*1024*6) { $(tr.td_progress).text("太大"); upload_next(trs); return;}
-  if (tr.fo.size < 100) { $(tr.td_progress).text("太小"); upload_next(trs); return;}
+  if (tr.fo.size > 1024*1024*6) { $(tr.td_score).text("太大"); upload_next(trs); return;}
+  if (tr.fo.size < 100) { $(tr.td_score).text("太小"); upload_next(trs); return;}
 
-  mGetData({action:"require",filesize:""+tr.fo.size}, function(data) {
-    if (data.errcode!="ok") {upload_error(tr);upload_next(trs);return;}
-    tr.upload_id=data.id;
-    tr.uploader = splitUpload({file:tr.fo, upload_id:tr.upload_id, block_size:1024*600,
-      error: function(R) {upload_error(tr, R);upload_next(trs);},
-      cancel: function(R) {upload_cancel(tr);upload_next(trs);},
-      progress: function(R) {
-        var v = R.file_data_begin/R.file_size;
-        if (v>=1){v="100";}else{v+=".000";v=v.split(".")[1]; v=(v[0]=="0"?"":v[0])+v[1]+"."+v[2]; }
-        $(tr.td_progress).text(v+"%");
-        if (v == "100"){
-          mGetData({action:"score", id:tr.upload_id}, function(data) {
-            if (data.errcode!="ok") {score_error(tr);upload_next(trs);return;}
-            $(tr.td_score).text(data.score); upload_next(trs);
-          });
-        } else if (tr.upload_enable==0){R.enable=0;}
-      }
-    });
-    tr.uploader.start();
-  });
+  var blob = tr.fo.slice(0, tr.fo.size>4096?4096:tr.fo.size);
+  var reader = new FileReader();
+  reader.onloadend = function(){ var r=this.result.toLowerCase();
+    function f(k) { return (r.indexOf("\n"+k+":")>-1?1:0);}
+    if(f("from")+f("to")+f("subject")+f("message-id")+f("date")<2){
+      $(tr.td_score).html('<font color="red">EML信件?</font>');
+      upload_next(trs); return;
+    } else {
+      mGetData({action:"require",filesize:""+tr.fo.size}, function(data) {
+        if (data.errcode!="ok") {upload_error(tr);upload_next(trs);return;}
+        tr.upload_id=data.id;
+        tr.uploader = splitUpload({file:tr.fo, upload_id:tr.upload_id, block_size:1024*600,
+          error: function(R) {upload_error(tr, R);upload_next(trs);},
+          cancel: function(R) {upload_cancel(tr);upload_next(trs);},
+          progress: function(R) {
+            var v = R.file_data_begin/R.file_size;
+            if (v>=1){v="100";}else{v+=".000";v=v.split(".")[1]; v=(v[0]=="0"?"":v[0])+v[1]+"."+v[2]; }
+            $(tr.td_score).text(v+"%");
+            if (v == "100"){
+              mGetData({action:"score", id:tr.upload_id}, function(data) {
+                if (data.errcode!="ok") {score_error(tr);upload_next(trs);return;}
+                $(tr.td_score).text(data.score); upload_next(trs);
+              });
+            } else if (tr.upload_enable==0){R.enable=0;}
+          }
+        });
+        tr.uploader.start();
+      });
+    }
+  }
+  var e; try{reader.readAsBinaryString(blob);}catch(e){ $(tr.td_score).html("错误"); upload_next(trs); return; }
 }
 
 function upload_by_files(files) {
@@ -198,7 +193,6 @@ $(window).load(function(){ create_ubt(); ignore_some_drap()});
 <TR>
 <TD WIDTH="100"><NOBR>得分</NOBR></TD>
 <TD>文件名(大小)</TD>
-<TD WIDTH="50"><NOBR>进度</NOBR></TD>
 <TD WIDTH="50"><NOBR><span class="bt">删除</span></NOBR></TD>
 </TR><TR>
 </TR>
