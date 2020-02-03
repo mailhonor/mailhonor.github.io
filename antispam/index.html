@@ -4,13 +4,13 @@
 <META http-equiv="Content-Type" content="text/html; charset=UTF-8" />
 <TITLE>Linux平台邮件技术</TITLE>
 <style type="text/css">
-html,body{height:101%;padding:0;margin:0;font-size:16px;font-family:arial,tahoma,SimSun,sans-serif;}
-DIV.title *{color:#000000;}H1,H2{color:#CC00CC;}H3{color:#996600;}
+html,body{height:101%;padding:0;margin:0;font-size:16px;font-family:"微软雅黑",arial,tahoma,SimSun,sans-serif;}
+DIV.title *{color:#222222;}H1,H2{color:#996600;}H3{color:#000000;}
 A{text-decoration:none;color:#3399cc;}A:hover{text-decoration:underline;}
-LI{margin:5px 0;}P{margin:10px 0 1px 0;}DIV.hr{border-top:1px solid black;margin:20px 0;}
+LI{margin:5px 0;}P{margin:10px 0 1px 0;}DIV.hr{border-top:1px solid #CCCCCC;margin:20px 0;}
 .tbview{margin:0;border-collapse:collapse;border-spacing:0;border:1px solid #669933;}
 .tbview>tbody>tr>td{padding:5px 8px;border:1px solid #669933;}
-PRE.code{border-left:1px solid #CCC;padding:10px;}
+PRE.code{border-left:1px solid #CCC;padding:10px;font-family:Consolas,"Courier New";}
 DIV.con{margin:20px auto;width:1000px;}DIV.main,DIV.foot{padding-bottom:50px;}
 </style>
 </HEAD>
@@ -19,7 +19,8 @@ DIV.con{margin:20px auto;width:1000px;}DIV.main,DIV.foot{padding-bottom:50px;}
 </DIV>
 </DIV><DIV CLASS="hr"></DIV><DIV CLASS="con main">
 
-<H1>基于内容的垃圾邮件识别 -- 帮助文档</H1>
+<H1>基于内容的垃圾邮件识别 --- 帮助文档</H1>
+<P><a target="_blank" href="//shang.qq.com/wpa/qunwpa?idkey=bd2db0017d22da57f9315424c4295d18e01af88b62097854d9abdbe38b8a523a"><img border="0" src="//pub.idqqimg.com/wpa/images/group.png" alt="邮件技术" title="邮件技术"></a>
 <P>HONOR-SPAM 是一款邮件打分系统,用于识别垃圾邮件. 最新版本2.5
 <P>支持中文简体,繁体,日文,韩文,越南文,等文字
 <P>速度快,在基于dell vostro(notebook)的vmware虚拟机上,单线程每秒处理1000封信件
@@ -36,7 +37,7 @@ DIV.con{margin:20px auto;width:1000px;}DIV.main,DIV.foot{padding-bottom:50px;}
 <H3>更新特征库</H3>
 <P>下载最新版 const-(version).db.gz(建议备份), 解开得到 const.db, 移动到 ./var/spamdb/const.db
 
-<H2>服务启动/停止/重启</H2>
+<H3>服务启动/停止/重启</H3>
 <P>./bin/master.sh start/stop/reload
 
 <H2>文件目录说明</H2>
