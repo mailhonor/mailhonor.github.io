@@ -103,36 +103,40 @@ function upload_one_by_one(trs){
   if (tr.fo.size < 100) { $(tr.td_score).text("太小"); upload_next(trs); return;}
 
   var blob = tr.fo.slice(0, tr.fo.size>4096?4096:tr.fo.size);
-  var reader = new FileReader();
-  reader.onloadend = function(){ var r=this.result.toLowerCase();
-    function f(k) { return (r.indexOf("\n"+k+":")>-1?1:0);}
-    if(f("from")+f("to")+f("subject")+f("message-id")+f("date")<2){
-      $(tr.td_score).html('<font color="red">EML信件?</font>');
-      upload_next(trs); return;
-    } else {
-      mGetData({action:"require",filesize:""+tr.fo.size}, function(data) {
-        if (data.errcode!="ok") {upload_error(tr);upload_next(trs);return;}
-        tr.upload_id=data.id;
-        tr.uploader = splitUpload({file:tr.fo, upload_id:tr.upload_id, block_size:1024*600,
-          error: function(R) {upload_error(tr, R);upload_next(trs);},
-          cancel: function(R) {upload_cancel(tr);upload_next(trs);},
-          progress: function(R) {
-            var v = R.file_data_begin/R.file_size;
-            if (v>=1){v="100";}else{v+=".000";v=v.split(".")[1]; v=(v[0]=="0"?"":v[0])+v[1]+"."+v[2]; }
-            $(tr.td_score).text(v+"%");
-            if (v == "100"){
-              mGetData({action:"score", id:tr.upload_id}, function(data) {
-                if (data.errcode!="ok") {score_error(tr);upload_next(trs);return;}
-                $(tr.td_score).text(data.score); upload_next(trs);
-              });
-            } else if (tr.upload_enable==0){R.enable=0;}
-          }
-        });
-        tr.uploader.start();
+
+  function _up() {
+    mGetData({action:"require",filesize:""+tr.fo.size}, function(data) {
+      if (data.errcode!="ok") {upload_error(tr);upload_next(trs);return;}
+      tr.upload_id=data.id;
+      tr.uploader = splitUpload({file:tr.fo, upload_id:tr.upload_id, block_size:1024*600,
+        error: function(R) {upload_error(tr, R);upload_next(trs);},
+        cancel: function(R) {upload_cancel(tr);upload_next(trs);},
+        progress: function(R) {
+          var v = R.file_data_begin/R.file_size;
+          if (v>=1){v="100";}else{v+=".000";v=v.split(".")[1]; v=(v[0]=="0"?"":v[0])+v[1]+"."+v[2]; }
+          $(tr.td_score).text(v+"%");
+          if (v == "100"){
+            mGetData({action:"score", id:tr.upload_id}, function(data) {
+              if (data.errcode!="ok") {score_error(tr);upload_next(trs);return;}
+              $(tr.td_score).text(data.score); upload_next(trs);
+            });
+          } else if (tr.upload_enable==0){R.enable=0;}
+        }
       });
-    }
+      tr.uploader.start();
+    });
   }
-  var e; try{reader.readAsBinaryString(blob);}catch(e){ $(tr.td_score).html("错误"); upload_next(trs); return; }
+  var reader = new FileReader();
+  if (reader.readAsBinaryString) {
+    reader.onloadend = function(){ var r=this.result.toLowerCase();
+      function f(k) { return (r.indexOf("\n"+k+":")>-1?1:0);}
+      if(f("from")+f("to")+f("subject")+f("message-id")+f("date")<2){
+        $(tr.td_score).html('<font color="red">EML信件?</font>');
+        upload_next(trs); return;
+      } else { _up(); }
+    }
+    var e; try{reader.readAsBinaryString(blob);}catch(e){ $(tr.td_score).html("错误"); upload_next(trs); return; }
+  } else { _up(); }
 }
 
 function upload_by_files(files) {
