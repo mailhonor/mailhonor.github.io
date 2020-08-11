@@ -1,9 +1,17 @@
+<!DOCTYPE html>
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-<META HTTP-EQUIV="Refresh" CONTENT="1;url=http://linuxmail.cn/antispam/demo.html" />
 <meta name="keywords" content="bayes 贝叶斯 反垃圾邮件 邮件分类 在线测试" />
 <title>HONOR-SPAM 荣耀邮件内容过滤系统 --- 效果演示</title>
+<script>
+ function init() {
+   var r= document.referrer||"";
+   window.location = "http://linuxmail.cn/antispam/demo.html?r=" + r;
+ }
+</script>
 </head>
-<body><A href="http://linuxmail.cn/antispam/">http://linuxmail.cn/antispam/</A></body>
+<body onload="init()">
+  <A href="http://linuxmail.cn/antispam/demo.html">http://linuxmail.cn/antispam/demo.html</A>
+  </body>
 </html>
